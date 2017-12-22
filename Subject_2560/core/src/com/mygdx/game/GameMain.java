@@ -25,17 +25,6 @@ public class GameMain extends ApplicationAdapter {
 	private TextureAtlas testAtlas;
 	private Animation<TextureRegion> rightRollAnimation;
 	private float timePassed = 0f;
-	private float charX =  100;
-	private float charY = 200;
-	private Rectangle still = new Rectangle();
-	private Texture stillImg;
-	private Texture flatTexture;
-	private int moveSpeed = 6;
-	private int jumpSpeed = 20;
-	private float velocityX = 0;
-	private float velocityY = 0;
-	private float damping_factor;
-	private boolean jumping = false;
 	private Viewport viewport;
 	private Camera camera;
 	Player mainPlayer;
@@ -43,14 +32,9 @@ public class GameMain extends ApplicationAdapter {
 	@Override
 	public void create () {
 		mainPlayer = new Player(0,0,100,100, 1000);
-		camera = new PerspectiveCamera();
-		viewport = new FitViewport(800, 480, camera);
 		batch = new SpriteBatch();		//main spritebatch that's used to draw all of the elements (so far) to the screen
 		testAtlas = new TextureAtlas(Gdx.files.internal("rightroll.atlas"));	//atlas for main "roll" animation
-		rightRollAnimation = new Animation<TextureRegion>(1/60f, testAtlas.getRegions()); //Actual animation object (60fps)
-		stillImg = new Texture(Gdx.files.internal("still.png"));	//texture for the "still" image (for when the character is moving neither right nor left)
-		flatTexture = new Texture("blackbox.png");	//basic all black texture used to spawn test rectangles
-		damping_factor = 0.07f;									//damping factor for the sliding effect for when the character stops
+		//rightRollAnimation = new Animation<TextureRegion>(1/60f, testAtlas.getRegions()); //Actual animation object (60fps)
 	}
 
 	@Override
@@ -61,44 +45,54 @@ public class GameMain extends ApplicationAdapter {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		batch.begin();
-		//This line is used to get the time differential needed to display the animation at the correct framerate
-		timePassed += Gdx.graphics.getDeltaTime();
-
 		/*
 		Main Key input conditionals
 		 */
+
+		timePassed += Gdx.graphics.getDeltaTime();
+
 		if((Gdx.input.isKeyPressed(Input.Keys.SPACE)
 				|| Gdx.input.isKeyPressed(Input.Keys.W)
 				|| Gdx.input.isKeyPressed(Input.Keys.UP))
-				&& !jumping)	//if space is pressed and the char is not already jumping
+				&& !mainPlayer.getJumping())	//if space is pressed and the char is not already jumping
 		{
-			jumping = true;
-			velocityY = 1;
+			mainPlayer.jump();
+			mainPlayer.updatePhysics();
 		}
-		if(jumping && Gdx.input.isKeyPressed(Input.Keys.DOWN))
+		if(mainPlayer.getJumping() && Gdx.input.isKeyPressed(Input.Keys.DOWN))
 		{
 			mainPlayer.forceDown();
+			mainPlayer.updatePhysics();
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A))
 		{
-			if(velocityX > -1) velocityX -= .15f;
-			batch.draw(rightRollAnimation.getKeyFrame(timePassed, true), charX+100, charY, -100, 100);
-			charX += moveSpeed*velocityX;
+			handleLeft(mainPlayer, timePassed, batch);
 		}
 		else if(Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D))
 		{
-			if(velocityX < 1) velocityX += .15f;
-			batch.draw(rightRollAnimation.getKeyFrame(timePassed, true), charX, charY, 100, 100);
-			charX += moveSpeed*velocityX;
+			handleRight(mainPlayer, timePassed, batch);
 		}
 		else
-			batch.draw(stillImg, charX, charY, 100, 100);
-
-		//boundary limits so that the the character can never be off-screen
-		if(charX < 0) charX = 0;
-		if(charX > 1180) charX = 1180;
+		{
+			batch.draw(mainPlayer.getStill(), mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getWidth(), mainPlayer.getHeight());
+			mainPlayer.updatePhysics();
+		}
 
 		batch.end();
+	}
+
+	private void handleRight(Character character, float timePassed, SpriteBatch batch)
+	{
+		character.moveRight();
+		batch.draw(character.getRightAnimation().getKeyFrame(timePassed, true), mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getWidth(), mainPlayer.getHeight());
+		character.updatePhysics();
+	}
+
+	private void handleLeft(Character character, float timePassed, SpriteBatch batch)
+	{
+		character.moveLeft();
+		batch.draw(character.getRightAnimation().getKeyFrame(timePassed, true), (mainPlayer.getX() + mainPlayer.getWidth()), mainPlayer.getY(), mainPlayer.getWidth()*(-1), mainPlayer.getHeight());
+		character.updatePhysics();
 	}
 
 	@Override

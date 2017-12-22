@@ -6,17 +6,17 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
-import java.util.HashMap;
-
 /**
  * Created by root on 12/21/17.
  */
 public class Player implements Character {
+    private TextureRegion currFrame;
+    private Texture stillImg;
     private int health;
     private int grenades;
     private TextureAtlas testAtlas;
     private Animation<TextureRegion> rightRollAnimation;
-    private float timePassed = 0f;
+    //private float timePassed = 0f;
     private float x;
     private float y;
     private int width;
@@ -25,9 +25,9 @@ public class Player implements Character {
     private int jumpSpeed = 20;
     private float velocityX = 0;
     private float velocityY = 0;
-    private float damping_factor;
+    private float accelerationX = 0.15f;
+    private float damping_factor = .07f;
     private boolean jumping = false;
-    private Texture stillImg;
 
     public Player(float x, float y, int width, int height, int health)
     {
@@ -38,6 +38,21 @@ public class Player implements Character {
         this.y = y;
         this.width = width;
         this.height = height;
+    }
+
+    public TextureRegion getCurrFrame()
+    {
+        return this.currFrame;
+    }
+
+    public Animation<TextureRegion> getRightAnimation()
+    {
+        return rightRollAnimation;
+    }
+
+    public Texture getStill()
+    {
+        return this.stillImg;
     }
 
     public void setGrenades(int grenades)
@@ -60,22 +75,57 @@ public class Player implements Character {
         return this.health;
     }
 
+    public int getWidth()
+    {
+        return this.width;
+    }
+
+    public int getHeight()
+    {
+        return this.height;
+    }
+
+    public float getX()
+    {
+        return this.x;
+    }
+
+    public float getY()
+    {
+        return this.y;
+    }
+
+    public boolean getJumping()
+    {
+        return jumping;
+    }
+
     public void moveRight()
     {
+        if(velocityX < 1) velocityX += this.accelerationX;  //causes the acceleration of the player
+        this.x += moveSpeed*velocityX;                       //main player displacement code
 
     }
 
     public void moveLeft()
     {
-
+        if(velocityX > -1) velocityX -= this.accelerationX;       //causes the acceleration of the player
+        this.x += moveSpeed*velocityX;              //main player displacement code
     }
 
     public void jump()
     {
-
+        this.jumping = true;
+        this.velocityY = 1;
     }
 
-    private void updatePhysics()
+    public void forceDown()
+    {
+        velocityY = -1.0f;
+        updatePhysics();
+    }
+
+    public void updatePhysics()
     {
         /*
 		main conditionals to handle the very basic "physics" that have so far been implemented
@@ -100,10 +150,9 @@ public class Player implements Character {
                 velocityY -= 0.05f;
             }
         }
-    }
 
-    public void forceDown()
-    {
-        velocityY = -1.5f;
+        //boundary limits so that the the character can never be off-screen
+        if(this.x < 0) this.x = 0;
+        if(this.x > 1180) this.x = 1180;
     }
 }
