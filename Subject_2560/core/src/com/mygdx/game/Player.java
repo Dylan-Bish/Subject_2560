@@ -6,27 +6,27 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
+import java.util.ArrayList;
+
 /**
- * Created by root on 12/21/17.
+ * Created by Dylan Bish on 12/21/17.
  */
 public class Player implements Character {
-    private TextureRegion currFrame;
     private Texture stillImg;
     private int health;
     private int grenades;
     private TextureAtlas testAtlas;
     private Animation<TextureRegion> rightRollAnimation;
-    //private float timePassed = 0f;
     private float x;
     private float y;
     private int width;
     private int height;
     private int moveSpeed = 6;
-    private int jumpSpeed = 20;
+    private int jumpSpeed = 25;
     private float velocityX = 0;
     private float velocityY = 0;
-    private float accelerationX = 0.15f;
-    private float damping_factor = .07f;
+    private float accelerationX = 0.1f;
+    private float damping_factor = 0.1f;
     private boolean jumping = false;
 
     public Player(float x, float y, int width, int height, int health)
@@ -40,9 +40,16 @@ public class Player implements Character {
         this.height = height;
     }
 
-    public TextureRegion getCurrFrame()
+    private ArrayList<TextureAtlas> getAllAtlasesUsed()
     {
-        return this.currFrame;
+        ArrayList<TextureAtlas> atlases = new ArrayList<>();
+        atlases.add(testAtlas);
+        /*
+        Add any TextureAtlas files used in the Player file here.
+        This Arraylist gets passed to the dispose() function to dispose
+        of each of the textureAtlases used in the file
+         */
+        return atlases;
     }
 
     public Animation<TextureRegion> getRightAnimation()
@@ -121,7 +128,7 @@ public class Player implements Character {
 
     public void forceDown()
     {
-        velocityY = -1.0f;
+        velocityY = -0.8f;
         updatePhysics();
     }
 
@@ -155,4 +162,17 @@ public class Player implements Character {
         if(this.x < 0) this.x = 0;
         if(this.x > 1180) this.x = 1180;
     }
+
+    public void dispose()
+    {
+        //disposes of all the atlases used in this file
+        ArrayList<TextureAtlas> atlasList = this.getAllAtlasesUsed();
+        for(TextureAtlas atlas : atlasList) {
+            atlas.dispose();
+            //System.out.println("Disposed of " + atlas.toString());
+            //^^once we add more textureAtlases, we should use this line of code to make sure that all
+            //of them are getting disposed
+        }
+    }
+
 }
