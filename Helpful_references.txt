@@ -10,3 +10,5 @@ https://github.com/libgdx/libgdx/wiki/Tile-maps
 Maps UML image (Added by DB 12/22/2017)
 https://raw.githubusercontent.com/wiki/libgdx/libgdx/images/maps-api.png
 
+Viewports info (Possibly won't use) (Added by DB 12/22/2017)
+https://github.com/libgdx/libgdx/wiki/Viewports
