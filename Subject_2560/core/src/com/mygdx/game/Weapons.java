@@ -9,19 +9,19 @@ public enum Weapons {
     PISTOL,
     RIFLE,
     SHOTGUN,
-    PISTOLADV,
-    RIFLEADV,
-    SHOTGUNADV,
+    PISTOL_ADV,
+    RIFLE_ADV,
+    SHOTGUN_ADV,
     PLASMAKNIFE;
 
     public int dmg;
+
+    Weapons() {}
 
     Weapons (int dmg)
     {
         this.dmg = dmg;
     }
-
-    Weapons() {}
 
     public int getDmg()
     {
