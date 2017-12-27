@@ -183,7 +183,6 @@ public class Player implements Character {
             jumping = false;
         }
          **/
-
         //this is my test comment
         System.out.println("And this is my test code");
 
