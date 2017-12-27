@@ -12,10 +12,10 @@ public class MapHandler{
     private OrthogonalTiledMapRenderer renderer;
     private OrthographicCamera camera;
 
-    MapHandler()
+    MapHandler(float unitScale)
     {
         map = new TmxMapLoader().load("maps/MyMap.tmx");
-        renderer = new OrthogonalTiledMapRenderer(map,0.25f);
+        renderer = new OrthogonalTiledMapRenderer(map, unitScale);
         camera = new OrthographicCamera();
     }
 

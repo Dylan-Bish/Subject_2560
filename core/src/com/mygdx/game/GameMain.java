@@ -14,13 +14,14 @@ public class GameMain extends Game {
 	private SpriteBatch batch;
 	private Player mainPlayer;
 	private float timePassed = 0f;
-	//private MapHandler sh;
+	private float mapUnitScale = 0.25f;
+	private MapHandler sh;
 
 	@Override
 	public void create () {
 		batch = new SpriteBatch();		//main spritebatch that's used to draw all of the elements (so far) to the screen
-		//sh = new MapHandler();
-		mainPlayer = new Player(0, 600, 50, 50, 1000, batch);
+		sh = new MapHandler(mapUnitScale);
+		mainPlayer = new Player(0, 600, 50, 50, 1000, sh.getCollisionLayer(), mapUnitScale);
 	}
 
 	@Override
@@ -32,15 +33,15 @@ public class GameMain extends Game {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		timePassed += Gdx.graphics.getDeltaTime();	//increment timepassed
-		//sh.show();
-		//sh.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		//sh.render(timePassed);
+		sh.show();
+		sh.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		sh.render(timePassed);
 
 		batch.begin();								//start rendering the spritebatch
-		mainPlayer.drawMap();
 		inputHandler(timePassed);					//use incremented timepassed to get input
+		mainPlayer.updatePhysics();
 		batch.end();								//stop rendering the spritebatch and restart
-		//sh.dispose();
+		sh.dispose();
 	}
 
 	private void inputHandler(float timePassed)
@@ -75,7 +76,7 @@ public class GameMain extends Game {
 			/* main no-input handler */
 			batch.draw(mainPlayer.getStill(), mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getWidth(), mainPlayer.getHeight());
 		}
-		mainPlayer.updatePhysics();
+
 	}
 
 	@Override

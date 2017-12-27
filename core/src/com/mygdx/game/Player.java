@@ -14,20 +14,19 @@ import java.util.ArrayList;
  * Created by Dylan Bish on 12/21/17.
  */
 public class Player implements Character {
-    private SpriteBatch batch;
     private TiledMapTileLayer collisionLayer;
     private Texture stillImg;
-    private Texture mapImg;
     private int health;
     private int grenades;
     private TextureAtlas testAtlas;
     private Animation<TextureRegion> rightRollAnimation;
-    private float x;
-    private float y;
-    private float width;
-    private float height;
+    private int x;
+    private int y;
+    private int width;
+    private int height;
     private int moveSpeed = 12;
     private int jumpSpeed = 20;
+    private float mapUnitScale;
     private float velocityX = 0;
     private float velocityY = 0;
     private float accelerationX = 0.13f;
@@ -36,21 +35,19 @@ public class Player implements Character {
     private boolean jumping = true;
     private boolean xCollision = false;
     private boolean yCollision = false;
+    private boolean onPlatform = false;
 
-    public Player(float x, float y, int width, int height, int health, SpriteBatch batch)
+    public Player(int x, int y, int width, int height, int health, TiledMapTileLayer collisionLayer, float mapUnitScale)
     {
         testAtlas = new TextureAtlas(Gdx.files.internal("rightroll.atlas"));	//atlas for main "roll" animation
         rightRollAnimation = new Animation<TextureRegion>(1/60f, testAtlas.getRegions()); //Actual animation object (60fps)
         stillImg = new Texture(Gdx.files.internal("still.png"));	//texture for the "still" image (for when the character is moving neither right nor left)
-        mapImg = new Texture(Gdx.files.internal("maps/PlayMap.png"));
-        this.batch = batch;
-
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.collisionLayer = collisionLayer;
-
+        this.mapUnitScale = mapUnitScale;
     }
 
     private ArrayList<TextureAtlas> getAllAtlasesUsed()
@@ -152,6 +149,9 @@ public class Player implements Character {
         if(velocityY < -2)  velocityY = -2;
         if(velocityY > 2)   velocityY = 2;
 
+        int oldX = x;
+        int oldY = y;
+
         if(velocityX < 0)
         {
             x += moveSpeed*velocityX;
@@ -169,30 +169,25 @@ public class Player implements Character {
         }
 
         if (y < 0){
-            y = 0;
             yCollision = true;
             jumping = false;
             velocityY = 0;
         }
 
-        /** beginning of collision detection code **/
-        int pixel = mapImg.getTextureData().consumePixmap().getPixel((int) x, mapImg.getHeight() - (int) y);
-        byte alpha = (byte) pixel;
-        //System.out.println(Byte.compareUnsigned(alpha,(byte)255));
-        if (velocityY < 0 && Byte.compareUnsigned(alpha, (byte) 255) == 0) {
-            System.out.println("Platform condition met");
+        if (Gdx.graphics.getWidth() - width < x || x < 0) xCollision = true;
+        if (x < 0 && oldX > 0) x = 0;
+        if (y < 0 && oldY > 0) y = 0;
+
+        if (isPassable(x + width / 2, y)) {
+            onPlatform = true;
+        } else
+            onPlatform = false;
+
+        if (onPlatform) {
             velocityY = 0;
             jumping = false;
+            yCollision = true;
         }
-
-        //boundary limits so that the the character can never be off-screen
-        /**
-        if(x < 0) x = 0;
-        if(x > (Gdx.graphics.getWidth() - width)) x = Gdx.graphics.getWidth() - width;
-         **/
-
-        if(Gdx.graphics.getWidth()-width < x) x = Gdx.graphics.getWidth() - width;
-        if(x < 0) x = 0;
     }
 
     public void draw(SpriteBatch batch, float timePassed)
@@ -217,9 +212,16 @@ public class Player implements Character {
         }
     }
 
-    public void drawMap() {
-        batch.draw(mapImg, 0, 0);
-        mapImg.getTextureData().prepare();  //this method needs to be called before the pixel data can be retrieved for the collision detection.
-    }
+    private boolean isPassable(int x, int y) {
+        int w = (int) (collisionLayer.getTileWidth() * mapUnitScale);
+        int h = (int) (collisionLayer.getTileHeight() * mapUnitScale);
 
+        if (collisionLayer.getCell(x / w, y / h) == null)
+            return false;
+        else {
+            return (collisionLayer.getCell(x / w, y / h).getTile().getProperties().containsKey("rigid")
+                    || collisionLayer.getCell(x / w, y / h).getTile().getProperties().containsKey("platform"));
+        }
+
+    }
 }
