@@ -22,15 +22,15 @@ public class Player implements Character {
     private float width;
     private float height;
     private int moveSpeed = 12;
-    private int jumpSpeed = 15;
+    private int jumpSpeed = 20;
     private float velocityX = 0;
     private float velocityY = 0;
     private float accelerationX = 0.13f;
     private float gravity = -.06f;
     private float damping_factor = 0.13f;
     private boolean jumping = true;
-    private boolean xCollision;
-    private boolean yCollision;
+    private boolean xCollision = false;
+    private boolean yCollision = false;
 
     public Player(float x, float y, int width, int height, int health, TiledMapTileLayer collisionLayer)
     {
@@ -129,7 +129,7 @@ public class Player implements Character {
 
     public void forceDown()
     {
-        velocityY = -1f;
+        velocityY = -2;
     }
 
     public void updatePhysics(TiledMapTileLayer collisionLayer)
@@ -137,24 +137,11 @@ public class Player implements Character {
         /*
 		main conditionals to handle the very basic "physics" that have so far been implemented
 		 */
+        xCollision = false;
+        yCollision = false;
 
-        float oldY = this.y;
-        float oldX = this.x;
-
-        if(jumping)
-        {
-            velocityY += gravity;
-        }
-
-        if(velocityY < -1)  velocityY = -1;
-        if(velocityY > 1)   velocityY = 1;
-
-        if (y < 0 ){
-            yCollision = true;
-            jumping = false;
-        }else{
-            y += jumpSpeed * velocityY;
-        }
+        if(velocityY < -2)  velocityY = -2;
+        if(velocityY > 2)   velocityY = 2;
 
         if(velocityX < 0)
         {
@@ -167,13 +154,42 @@ public class Player implements Character {
             velocityX /= (1+damping_factor);
         }
 
+        if(jumping){
+            y += jumpSpeed * velocityY;
+            velocityY += gravity; //apply acceleration due to gravity
+        }
+
+        if (y < 0){
+            y = 0;
+            yCollision = true;
+            jumping = false;
+            velocityY = 0;
+        }
+
         //boundary limits so that the the character can never be off-screen
+        /**
         if(x < 0) x = 0;
         if(x > (Gdx.graphics.getWidth() - width)) x = Gdx.graphics.getWidth() - width;
+         **/
 
-        if(xCollision) this.x = oldX;
-        if(yCollision) this.y = oldY;
+        if(Gdx.graphics.getWidth()-width < x) x = Gdx.graphics.getWidth() - width;
+        if(x < 0) x = 0;
+        /**
+        if(yCollision)
+        {
+            jumping = false;
+        }
+         **/
+
+        /**
+        System.out.println("velY = " + velocityY);
+        System.out.println("x: " + xCollision);
+        System.out.println("y: " + yCollision);
+        System.out.println("---------");
+         **/
+
     }
+
 
     public void draw(SpriteBatch batch, float timePassed)
     {
