@@ -12,3 +12,6 @@ https://raw.githubusercontent.com/wiki/libgdx/libgdx/images/maps-api.png
 
 Viewports info (Possibly won't use) (Added by DB 12/22/2017)
 https://github.com/libgdx/libgdx/wiki/Viewports
+
+Lots of great information about how the tileMaps work (Added by DB 12/31/2017)
+https://www.youtube.com/watch?v=qik60F5I6J4&list=PLXY8okVWvwZ0qmqSBhOtqYRjzWtUCWylb
