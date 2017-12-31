@@ -1,0 +1,360 @@
+
+rightroll.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+00
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll2.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+01
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll3.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+02
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll4.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+03
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll5.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+04
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll6.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+05
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll7.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+06
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll8.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+07
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll9.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+08
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll10.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+09
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll11.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+10
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll12.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+11
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll13.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+12
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll14.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+13
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll15.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+14
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll16.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+15
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll17.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+16
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll18.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+17
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll19.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+18
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll20.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+19
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll21.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+20
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll22.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+21
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll23.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+22
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll24.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+23
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll25.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+24
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll26.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+25
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll27.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+26
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll28.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+27
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll29.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+28
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+rightroll30.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+29
+  rotate: false
+  xy: 1, 1
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1

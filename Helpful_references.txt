@@ -1,0 +1,14 @@
+Base of documentation for all com.badlogic.gdx classes (Added by DB 12/22/2017)
+http://libgdx.badlogicgames.com/nightlies/docs/api/index.html?com/badlogic/gdx/
+
+Maps package (Added by DB 12/22/2017)
+http://libgdx.badlogicgames.com/nightlies/docs/api/index.html?com/badlogic/gdx/maps/package-use.html
+
+TileMaps usage (Added by DB 12/22/2017)
+https://github.com/libgdx/libgdx/wiki/Tile-maps
+
+Maps UML image (Added by DB 12/22/2017)
+https://raw.githubusercontent.com/wiki/libgdx/libgdx/images/maps-api.png
+
+Viewports info (Possibly won't use) (Added by DB 12/22/2017)
+https://github.com/libgdx/libgdx/wiki/Viewports
