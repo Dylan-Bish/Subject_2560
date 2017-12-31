@@ -6,14 +6,11 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
 
 /**
  * Created by Dylan Bish 12/19/2017
  **/
-
-/**
- * Just testing to see if I can push
- */
 
 public class GameMain extends Game {
     private OrthographicCamera camera;
@@ -22,6 +19,7 @@ public class GameMain extends Game {
     private float timePassed = 0f;
     private float mapUnitScale = 0.2f;
     private MapHandler sh;
+    private Vector2 point = new Vector2();
 
     @Override
     public void create () {
@@ -34,7 +32,7 @@ public class GameMain extends Game {
     @Override
     public void render() {
         //sets background to white
-        Gdx.gl.glClearColor(.7f, .7f, .7f, 1);
+        Gdx.gl.glClearColor(1f, 1f, 1f, 1);
         //displays background
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 

@@ -166,9 +166,10 @@ public class Player implements Character {
         if (isAntiGrav((int) x + width / 2, (int) y)) {
             jumping = true;
             velocityY += antiGravAccel;
-            if (velocityY < -1f) velocityY = -1f;
-            if (velocityY > 1f) velocityY = 1f;
         }
+
+        if (velocityY < -1f) velocityY = -1f;
+        if (velocityY > 1f) velocityY = 1f;
 
         checkYcollision(oldX, oldY);
         if (velocityX < 0) {      //check for collision on the left side
@@ -236,10 +237,10 @@ public class Player implements Character {
     }
 
     private boolean isAntiGrav(int x, int y) {
-        int w = (int) (collisionLayer.getTileWidth() * mapUnitScale);
-        int h = (int) (collisionLayer.getTileHeight() * mapUnitScale);
-        if (collisionLayer.getCell(x / w, y / h) == null) return false;
-        else return (collisionLayer.getCell(x / w, y / h).getTile().getProperties().containsKey("anti-gravity"));
+        float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
+        float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
+        if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
+        else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("anti-gravity"));
     }
 
     private void checkYcollision(float oldX, float oldY) {

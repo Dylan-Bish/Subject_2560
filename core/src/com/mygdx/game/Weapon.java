@@ -22,6 +22,4 @@ public enum Weapon {
     public void setDamage(int Damage) {
         damage = Damage;
     }
-
-
 }
