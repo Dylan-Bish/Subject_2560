@@ -31,6 +31,11 @@
    </properties>
   </objectgroup>
  </tile>
+    <tile id="3">
+        <properties>
+            <property name="anti-gravity" value=""/>
+        </properties>
+    </tile>
  <tile id="10">
      <properties>
          <property name="rigid" value=""/>

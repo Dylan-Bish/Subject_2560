@@ -20,22 +20,22 @@ public class Player implements Character {
     private int grenades;
     private TextureAtlas testAtlas;
     private Animation<TextureRegion> rightRollAnimation;
-    private int x;
-    private int y;
+    private float x;
+    private float y;
     private int width;
     private int height;
-    private int moveSpeed = 12;
+    private float moveSpeed = 10;
     private int jumpSpeed = 20;
     private float mapUnitScale;
     private float velocityX = 0;
     private float velocityY = 0;
     private float accelerationX = 0.13f;
     private float gravity = -.06f;
-    private float damping_factor = 0.13f;
+    private float damping_factor = 0.15f;
+    private float antiGravAccel = 0.1f;
+    private float forceDownAccel = -0.39f;
     private boolean jumping = true;
     private boolean xCollision = false;
-    private boolean yCollision = false;
-    private boolean onPlatform = false;
 
     public Player(int x, int y, int width, int height, int health, TiledMapTileLayer collisionLayer, float mapUnitScale)
     {
@@ -135,31 +135,21 @@ public class Player implements Character {
 
     public void forceDown()
     {
-        velocityY = -2;
+        if (velocityY > -1f)
+            velocityY += forceDownAccel;
     }
 
-    public void updatePhysics()
+    public void updatePhysics(MapHandler mh)
     {
         /*
 		main conditionals to handle the very basic "physics" that have so far been implemented
 		 */
-        xCollision = false;
-        yCollision = false;
+        float oldX = x;
+        float oldY = y;
 
-        if(velocityY < -2)  velocityY = -2;
-        if(velocityY > 2)   velocityY = 2;
-
-        int oldX = x;
-        int oldY = y;
-
-        if(velocityX < 0)
+        if (velocityX != 0 && !xCollision)
         {
-            x += moveSpeed*velocityX;
-            velocityX /= (1+damping_factor);
-        }
-        else if(velocityX > 0)
-        {
-            x +=  moveSpeed*velocityX;
+            x += moveSpeed * velocityX;
             velocityX /= (1+damping_factor);
         }
 
@@ -169,24 +159,40 @@ public class Player implements Character {
         }
 
         if (y < 0){
-            yCollision = true;
             jumping = false;
             velocityY = 0;
         }
 
-        if (Gdx.graphics.getWidth() - width < x || x < 0) xCollision = true;
-        if (x < 0 && oldX > 0) x = 0;
-        if (y < 0 && oldY > 0) y = 0;
+        if (isAntiGrav((int) x + width / 2, (int) y)) {
+            jumping = true;
+            velocityY += antiGravAccel;
+            if (velocityY < -1f) velocityY = -1f;
+            if (velocityY > 1f) velocityY = 1f;
+        }
 
-        if (isPassable(x + width / 2, y)) {
-            onPlatform = true;
-        } else
-            onPlatform = false;
+        checkYcollision(oldX, oldY);
+        if (velocityX < 0) {      //check for collision on the left side
+            if (isRigid(x, y) || isRigid(x, y + height)) {
+                if (!(isRigid(oldX, y) && isRigid(oldX, y + height))) {
+                    velocityX = 0;
+                    x = oldX - (oldX % (collisionLayer.getTileWidth() * mapUnitScale)) + 1;
+                }
+            }
+        } else if (velocityX > 0) {     //check for collision on the right side
+            if (isRigid(x + width, y) || isRigid(x + width, y + height)) {
+                if (!(isRigid(oldX + width, y) && isRigid(oldX + width, y + height))) {
+                    velocityX = 0;
+                    x = x - (x + width) % (collisionLayer.getTileWidth() * mapUnitScale) - 1;
+                }
+            }
+        }
+        checkYcollision(oldX, oldY);
 
-        if (onPlatform) {
-            velocityY = 0;
-            jumping = false;
-            yCollision = true;
+        //conditional for when the camera should follow the player
+        if (x > Gdx.graphics.getWidth() / 2) {
+            //System.out.println("Camera condition met");
+            mh.getCamera().translate(1, 0, 0);
+            mh.getCamera().update();
         }
     }
 
@@ -212,16 +218,49 @@ public class Player implements Character {
         }
     }
 
-    private boolean isPassable(int x, int y) {
+    private boolean isUnpassable(float x, float y) {
+        float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
+        float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
+        if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
+        else {
+            return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("rigid")
+                    || collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("platform"));
+        }
+    }
+
+    private boolean isRigid(float x, float y) {
+        float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
+        float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
+        if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
+        else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("rigid"));
+    }
+
+    private boolean isAntiGrav(int x, int y) {
         int w = (int) (collisionLayer.getTileWidth() * mapUnitScale);
         int h = (int) (collisionLayer.getTileHeight() * mapUnitScale);
+        if (collisionLayer.getCell(x / w, y / h) == null) return false;
+        else return (collisionLayer.getCell(x / w, y / h).getTile().getProperties().containsKey("anti-gravity"));
+    }
 
-        if (collisionLayer.getCell(x / w, y / h) == null)
-            return false;
-        else {
-            return (collisionLayer.getCell(x / w, y / h).getTile().getProperties().containsKey("rigid")
-                    || collisionLayer.getCell(x / w, y / h).getTile().getProperties().containsKey("platform"));
+    private void checkYcollision(float oldX, float oldY) {
+        if (velocityY < 0) {
+            if (isUnpassable(x, y) || isUnpassable(x + width, y)) {
+                if (!isUnpassable(x, oldY) && !isUnpassable(x + width, oldY)) {
+                    velocityY = 0;
+                    y = oldY - oldY % (collisionLayer.getTileHeight() * mapUnitScale);
+                    jumping = false;
+                }
+            }
+        } else if (velocityY > 0) {   //velocityY is positive, which means the character is traveling upward
+            if (isRigid(x, y + height) || isRigid(x + width, y + height)) {
+                if (isRigid(oldX, y + height) || isRigid(oldX + width, y + height)) {
+                    velocityY = 0;
+                    y = y - (y + height) % (collisionLayer.getTileHeight() * mapUnitScale) - 1;
+                }
+            }
+        } else {
+            if (!(isUnpassable(x, y - 1)))
+                jumping = true;
         }
-
     }
 }

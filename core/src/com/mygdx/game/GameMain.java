@@ -4,6 +4,7 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 /**
@@ -11,35 +12,37 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
  **/
 
 public class GameMain extends Game {
+	private OrthographicCamera camera;
 	private SpriteBatch batch;
 	private Player mainPlayer;
 	private float timePassed = 0f;
-	private float mapUnitScale = 0.25f;
+	private float mapUnitScale = 0.2f;
 	private MapHandler sh;
 
 	@Override
 	public void create () {
-		batch = new SpriteBatch();		//main spritebatch that's used to draw all of the elements (so far) to the screen
+		batch = new SpriteBatch();        //main spritebatch that's used to draw all of the elements (so far) to the screen
 		sh = new MapHandler(mapUnitScale);
 		mainPlayer = new Player(0, 600, 50, 50, 1000, sh.getCollisionLayer(), mapUnitScale);
+		camera = sh.getCamera();
 	}
 
 	@Override
-	public void render () {
-
+	public void render() {
 		//sets background to white
 		Gdx.gl.glClearColor(.7f, .7f, .7f, 1);
 		//displays background
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+		//batch.setProjectionMatrix(camera.combined);
 		timePassed += Gdx.graphics.getDeltaTime();	//increment timepassed
 		sh.show();
 		sh.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		sh.render(timePassed);
+		sh.render(timePassed, mainPlayer);
 
 		batch.begin();								//start rendering the spritebatch
 		inputHandler(timePassed);					//use incremented timepassed to get input
-		mainPlayer.updatePhysics();
+		mainPlayer.updatePhysics(sh);
 		batch.end();								//stop rendering the spritebatch and restart
 		sh.dispose();
 	}

@@ -13,7 +13,7 @@ public interface Character{
     void setGrenades(int grenades);
     Animation<TextureRegion> getRightAnimation();
 
-    void updatePhysics();
+    void updatePhysics(MapHandler mh);
     void dispose();
     int getGrenades();
     void setHealth(int health);
