@@ -11,15 +11,17 @@ public class MapHandler{
     private TiledMap map;
     private OrthogonalTiledMapRenderer renderer;
     private OrthographicCamera camera;
+    private float unitScale;
 
-    MapHandler()
+    MapHandler(float unitScale)
     {
         map = new TmxMapLoader().load("maps/MyMap.tmx");
-        renderer = new OrthogonalTiledMapRenderer(map,0.25f);
+        renderer = new OrthogonalTiledMapRenderer(map, unitScale);
         camera = new OrthographicCamera();
+        this.unitScale = unitScale;
     }
 
-    public void render(float delta)
+    public void render(float delta, Player player)
     {
         renderer.setView(camera);
         renderer.render();
@@ -51,7 +53,11 @@ public class MapHandler{
 
     public void show() {
         map = new TmxMapLoader().load("maps/MyMap.tmx");
-        renderer = new OrthogonalTiledMapRenderer(map,0.25f);
+        renderer = new OrthogonalTiledMapRenderer(map, unitScale);
         camera = new OrthographicCamera();
+    }
+
+    public OrthographicCamera getCamera() {
+        return camera;
     }
 }
