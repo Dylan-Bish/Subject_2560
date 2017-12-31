@@ -2,10 +2,7 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 
 import java.util.ArrayList;
@@ -37,10 +34,10 @@ public class Player implements Character {
     private boolean jumping = true;
     private boolean xCollision = false;
 
-    public Player(int x, int y, int width, int height, int health, TiledMapTileLayer collisionLayer, float mapUnitScale)
+    public Player(int x, int y, int width, int height, int health, float mapUnitScale)
     {
         testAtlas = new TextureAtlas(Gdx.files.internal("rightroll.atlas"));	//atlas for main "roll" animation
-        rightRollAnimation = new Animation<TextureRegion>(1/60f, testAtlas.getRegions()); //Actual animation object (60fps)
+        rightRollAnimation = new Animation<TextureRegion>(1/30f, testAtlas.getRegions()); //Actual animation object (60fps)
         stillImg = new Texture(Gdx.files.internal("still.png"));	//texture for the "still" image (for when the character is moving neither right nor left)
         this.x = x;
         this.y = y;
@@ -190,19 +187,18 @@ public class Player implements Character {
         checkYcollision(oldX, oldY);
 
         //conditional for when the camera should follow the player
-        if (x > Gdx.graphics.getWidth() / 2) {
             //System.out.println("Camera condition met");
-            mh.getCamera().translate(1, 0, 0);
+            mh.getCamera().position.x  = this.x;
+            //mh.getCamera().position.y  = this.y;
             mh.getCamera().update();
-        }
     }
 
-    public void draw(SpriteBatch batch, float timePassed)
+    public void draw(Batch batch, float timePassed)
     {
         batch.draw(rightRollAnimation.getKeyFrame(timePassed, true), x, y, width, height);
     }
 
-    public void drawVerticalMirrored(SpriteBatch batch, float timePassed)
+    public void drawVerticalMirrored(Batch batch, float timePassed)
     {
         batch.draw(rightRollAnimation.getKeyFrame(timePassed,true), x+width, y, -width, height);
     }
@@ -263,5 +259,9 @@ public class Player implements Character {
             if (!(isUnpassable(x, y - 1)))
                 jumping = true;
         }
+    }
+
+    public void setCollisionLayer(TiledMapTileLayer collisionLayer){
+        this.collisionLayer = collisionLayer;
     }
 }

@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
@@ -23,7 +24,7 @@ public interface Character{
     void moveRight();
     void moveLeft();
     void jump();
-    void draw(SpriteBatch batch, float timePassed);
-    void drawVerticalMirrored(SpriteBatch batch, float timePassed);
+    void draw(Batch batch, float timePassed);
+    void drawVerticalMirrored(Batch batch, float timePassed);
 }
 

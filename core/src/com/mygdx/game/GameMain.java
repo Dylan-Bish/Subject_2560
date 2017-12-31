@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
@@ -13,40 +14,33 @@ import com.badlogic.gdx.math.Vector2;
  **/
 
 public class GameMain extends Game {
-    private OrthographicCamera camera;
-    private SpriteBatch batch;
+    private Batch batch;
     private Player mainPlayer;
     private float timePassed = 0f;
-    private float mapUnitScale = 0.2f;
-    private MapHandler sh;
-    private Vector2 point = new Vector2();
+    private float mapUnitScale = 0.25f;
+    private MapHandler mapHandler;
 
     @Override
     public void create () {
-        batch = new SpriteBatch();        //main spritebatch that's used to draw all of the elements (so far) to the screen
-        sh = new MapHandler(mapUnitScale);
-        mainPlayer = new Player(0, 600, 30, 50, 1000, sh.getCollisionLayer(), mapUnitScale);
-        camera = sh.getCamera();
+        mainPlayer = new Player(0, 600, 40, 40, 1000, mapUnitScale);
+        mapHandler = new MapHandler(mapUnitScale, mainPlayer);
+        mainPlayer.setCollisionLayer(mapHandler.getCollisionLayer());
+        this.batch =  mapHandler.getRendererBatch();
     }
 
     @Override
     public void render() {
-        //sets background to white
-        Gdx.gl.glClearColor(1f, 1f, 1f, 1);
-        //displays background
+        Gdx.gl.glClearColor(0.7f,0.7f,0.7f,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        //batch.setProjectionMatrix(camera.combined);
-        timePassed += Gdx.graphics.getDeltaTime();	//increment timepassed
-        sh.show();
-        sh.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        sh.render(timePassed, mainPlayer);
+        timePassed += Gdx.graphics.getDeltaTime();
 
-        batch.begin();								//start rendering the spritebatch
-        inputHandler(timePassed);					//use incremented timepassed to get input
-        mainPlayer.updatePhysics(sh);
-        batch.end();								//stop rendering the spritebatch and restart
-        sh.dispose();
+        mapHandler.getRenderer().setView(mapHandler.getCamera());
+        mapHandler.getRenderer().render();
+        mapHandler.getRendererBatch().begin();
+        inputHandler(timePassed);
+        mainPlayer.updatePhysics(mapHandler);
+        mapHandler.getRendererBatch().end();
     }
 
     private void inputHandler(float timePassed) {
@@ -74,7 +68,6 @@ public class GameMain extends Game {
             /* main no-input handler */
             batch.draw(mainPlayer.getStill(), mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getWidth(), mainPlayer.getHeight());
         }
-
     }
 
     @Override
