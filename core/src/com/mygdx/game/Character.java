@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
  * Created by Dylan Bish on 12/21/17.
  */
 
-//test push by Max
 
 public interface Character{
     int health = 0;

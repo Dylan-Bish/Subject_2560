@@ -1,25 +1,21 @@
 package com.mygdx.game;
 
-public enum Weapon {
+import com.badlogic.gdx.math.Vector2;
 
-    FISTS,
-    KNIFE,
-    PISTOL,
-    RIFLE,
-    SHOTGUN,
-    SNIPER,
-    PLASMA_KNIFE,
-    PISTOL_ADV,
-    RIFLE_ADV,
-    SHOTGUN_ADV;
+public abstract class Weapon {
 
-    private int damage;
+    private int _damage;
+    private Bullet _bullet;
 
     public int getDamage() {
-        return damage;
+        return _damage;
     }
 
     public void setDamage(int Damage) {
-        damage = Damage;
+        _damage = Damage;
+    }
+
+    public void setBullet(int damage, int velocity, int idealAngle, Vector2 initialPoint, int variationAngle) {
+        _bullet = new Bullet(damage, velocity, idealAngle, initialPoint, variationAngle);
     }
 }
