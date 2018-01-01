@@ -21,13 +21,13 @@ public class Player implements Character {
     private float y;
     private int width;
     private int height;
-    private float moveSpeed = 10;
+    private float moveSpeed = 7.5f;
     private int jumpSpeed = 20;
     private float mapUnitScale;
     private float velocityX = 0;
     private float velocityY = 0;
     private float accelerationX = 0.13f;
-    private float gravity = -.06f;
+    private float gravity = -.05f;
     private float damping_factor = 0.15f;
     private float antiGravAccel = 0.1f;
     private float forceDownAccel = -0.39f;
@@ -186,11 +186,15 @@ public class Player implements Character {
         }
         checkYcollision(oldX, oldY);
 
+        if(x < 0) x = 0;
+
         //conditional for when the camera should follow the player
+        if(x > Gdx.graphics.getWidth()*(1/4f)){
             //System.out.println("Camera condition met");
-            mh.getCamera().position.x  = this.x;
+            mh.getCamera().position.x  = this.x+Gdx.graphics.getWidth()/4f;
             //mh.getCamera().position.y  = this.y;
             mh.getCamera().update();
+        }
     }
 
     public void draw(Batch batch, float timePassed)
@@ -241,7 +245,7 @@ public class Player implements Character {
 
     private void checkYcollision(float oldX, float oldY) {
         if (velocityY < 0) {
-            if (isUnpassable(x, y) || isUnpassable(x + width, y)) {
+            if (isUnpassable(x, y-1) || isUnpassable(x + width, y-1)) {
                 if (!isUnpassable(x, oldY) && !isUnpassable(x + width, oldY)) {
                     velocityY = 0;
                     y = oldY - oldY % (collisionLayer.getTileHeight() * mapUnitScale);

@@ -30,7 +30,7 @@ public class GameMain extends Game {
 
     @Override
     public void render() {
-        Gdx.gl.glClearColor(0.7f,0.7f,0.7f,1);
+        Gdx.gl.glClearColor(0.5f,0.5f,0.5f,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         timePassed += Gdx.graphics.getDeltaTime();
@@ -52,7 +52,7 @@ public class GameMain extends Game {
             /* main jumping conditional  */
             mainPlayer.jump();
         }
-        if(mainPlayer.getJumping() && Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+        if(mainPlayer.getJumping() && (Gdx.input.isKeyPressed(Input.Keys.DOWN)) || Gdx.input.isKeyPressed(Input.Keys.S)){
             /* main "force down" conditional  */
             mainPlayer.forceDown();
         }
@@ -74,5 +74,6 @@ public class GameMain extends Game {
     public void dispose () {
         //method to make garbage collection more efficient
         mainPlayer.dispose();
+        mapHandler.dispose();
     }
 }
