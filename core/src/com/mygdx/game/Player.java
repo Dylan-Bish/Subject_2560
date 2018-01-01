@@ -43,6 +43,7 @@ public class Player implements Character {
         this.y = y;
         this.width = width;
         this.height = height;
+        this.health = health;
         this.collisionLayer = collisionLayer;
         this.mapUnitScale = mapUnitScale;
     }
@@ -160,9 +161,16 @@ public class Player implements Character {
             velocityY = 0;
         }
 
-        if (isAntiGrav((int) x + width / 2, (int) y)) {
+        if (isAntiGrav( x + width / 2, y)) {
             jumping = true;
             velocityY += antiGravAccel;
+        }
+
+        if (isDmgTile(x,y)
+                || isDmgTile(x+width, y)
+                || isDmgTile(x, y + height)
+                || isDmgTile(x+width, y+height)){
+            takeDamage(5);
         }
 
         if (velocityY < -1f) velocityY = -1f;
@@ -192,9 +200,10 @@ public class Player implements Character {
         if(x > Gdx.graphics.getWidth()*(1/4f)){
             //System.out.println("Camera condition met");
             mh.getCamera().position.x  = this.x+Gdx.graphics.getWidth()/4f;
-            //mh.getCamera().position.y  = this.y;
-            mh.getCamera().update();
+
         }
+        //mh.getCamera().position.y  = this.y;
+        mh.getCamera().update();
     }
 
     public void draw(Batch batch, float timePassed)
@@ -236,12 +245,19 @@ public class Player implements Character {
         else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("rigid"));
     }
 
-    private boolean isAntiGrav(int x, int y) {
+    private boolean isAntiGrav(float x, float y) {
         float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
         float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
         if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
         else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("anti-gravity"));
     }
+    private boolean isDmgTile(float x, float y) {
+        float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
+        float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
+        if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
+        else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("damage"));
+    }
+
 
     private void checkYcollision(float oldX, float oldY) {
         if (velocityY < 0) {
@@ -267,5 +283,9 @@ public class Player implements Character {
 
     public void setCollisionLayer(TiledMapTileLayer collisionLayer){
         this.collisionLayer = collisionLayer;
+    }
+
+    public void takeDamage(int damage){
+        if(health > 0) this.health -= damage;
     }
 }

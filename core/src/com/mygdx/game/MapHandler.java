@@ -30,10 +30,6 @@ public class MapHandler{
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
-    public void render(float delta)
-    {
-    }
-
     public void dispose()
     {
         map.dispose();
