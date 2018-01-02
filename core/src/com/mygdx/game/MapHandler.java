@@ -49,12 +49,6 @@ public class MapHandler{
         return (TiledMapTileLayer) map.getLayers().get(0);
     }
 
-    public void show() {
-
-        renderer = new OrthogonalTiledMapRenderer(map, unitScale);
-        camera = new OrthographicCamera();
-    }
-
     public OrthographicCamera getCamera() {
         return camera;
     }

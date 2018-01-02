@@ -33,6 +33,8 @@ public class Player implements Character {
     private float forceDownAccel = -0.39f;
     private boolean jumping = true;
     private boolean xCollision = false;
+    private TextureRegion arrow;
+    private float armAngle;
 
     public Player(int x, int y, int width, int height, int health, float mapUnitScale)
     {
@@ -44,10 +46,9 @@ public class Player implements Character {
         this.width = width;
         this.height = height;
         this.health = health;
-        this.collisionLayer = collisionLayer;
         this.mapUnitScale = mapUnitScale;
+        arrow = new TextureRegion(new Texture(Gdx.files.internal("arrow.png")));
     }
-
     private ArrayList<TextureAtlas> getAllAtlasesUsed()
     {
         ArrayList<TextureAtlas> atlases = new ArrayList<>();
@@ -59,84 +60,64 @@ public class Player implements Character {
          */
         return atlases;
     }
-
     public Animation<TextureRegion> getRightAnimation()
     {
         return rightRollAnimation;
     }
-
-    public Texture getStill()
-    {
-        return this.stillImg;
-    }
-
     public void setGrenades(int grenades)
     {
         this.grenades = grenades;
     }
-
     public int getGrenades()
     {
         return this.grenades;
     }
-
     public void setHealth(int health)
     {
         this.health = health;
     }
-
     public int getHealth()
     {
         return this.health;
     }
-
     public float getWidth()
     {
         return this.width;
     }
-
     public float getHeight()
     {
         return this.height;
     }
-
     public float getX()
     {
         return this.x;
     }
-
     public float getY()
     {
         return this.y;
     }
-
     public boolean getJumping()
     {
         return jumping;
     }
-
     public void moveRight()
     {
         if(velocityX < 1) velocityX += this.accelerationX;  //causes the acceleration of the player
     }
-
     public void moveLeft()
     {
         if(velocityX > -1) velocityX -= this.accelerationX;       //causes the acceleration of the player
     }
-
     public void jump()
     {
         jumping = true;
         velocityY = 1;
     }
-
     public void forceDown()
     {
         if (velocityY > -1f)
             velocityY += forceDownAccel;
     }
-
     public void updatePhysics(MapHandler mh)
     {
         /*
@@ -205,17 +186,25 @@ public class Player implements Character {
         //mh.getCamera().position.y  = this.y;
         mh.getCamera().update();
     }
-
     public void draw(Batch batch, float timePassed)
     {
         batch.draw(rightRollAnimation.getKeyFrame(timePassed, true), x, y, width, height);
+        drawArm(batch);
     }
-
     public void drawVerticalMirrored(Batch batch, float timePassed)
     {
         batch.draw(rightRollAnimation.getKeyFrame(timePassed,true), x+width, y, -width, height);
+        drawArm(batch);
     }
-
+    public void drawStill(Batch batch)
+    {
+        batch.draw(stillImg, x, y, width, height);
+        drawArm(batch);
+    }
+    private void drawArm(Batch batch)
+    {
+        batch.draw(arrow, x,y,width/2,height/2, width, height, 2, 2, armAngle);
+    }
     public void dispose()
     {
         //disposes of all the atlases used in this file
@@ -226,8 +215,8 @@ public class Player implements Character {
             //^^once we add more textureAtlases, we should use this line of code to make sure that all
             //of them are getting disposed
         }
-    }
 
+    }
     private boolean isUnpassable(float x, float y) {
         float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
         float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
@@ -237,14 +226,12 @@ public class Player implements Character {
                     || collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("platform"));
         }
     }
-
     private boolean isRigid(float x, float y) {
         float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
         float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
         if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
         else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("rigid"));
     }
-
     private boolean isAntiGrav(float x, float y) {
         float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
         float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
@@ -257,8 +244,6 @@ public class Player implements Character {
         if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
         else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("damage"));
     }
-
-
     private void checkYcollision(float oldX, float oldY) {
         if (velocityY < 0) {
             if (isUnpassable(x, y-1) || isUnpassable(x + width, y-1)) {
@@ -280,12 +265,14 @@ public class Player implements Character {
                 jumping = true;
         }
     }
-
     public void setCollisionLayer(TiledMapTileLayer collisionLayer){
         this.collisionLayer = collisionLayer;
     }
-
     public void takeDamage(int damage){
         if(health > 0) this.health -= damage;
+    }
+    public void updateArmAngle(double angle)
+    {
+        armAngle = (float) angle;
     }
 }

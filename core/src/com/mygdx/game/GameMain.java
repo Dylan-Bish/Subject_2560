@@ -3,18 +3,11 @@ package com.mygdx.game;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
-
 import static com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled;
-import static com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line;
+import static java.lang.Math.atan;
 
 /**
  * Created by Dylan Bish 12/19/2017
@@ -22,30 +15,27 @@ import static com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line;
 
 public class GameMain extends Game {
     private Batch batch;
-    private SpriteBatch hudBatch;
     private Player mainPlayer;
     private float timePassed = 0f;
     private float mapUnitScale = 0.25f;
     private MapHandler mapHandler;
-    ShapeRenderer healthRenderer;
+    private ShapeRenderer healthRenderer;
+    private float angle = 0;
+    private double dx, dy;
 
     @Override
     public void create () {
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         mainPlayer = new Player(0, 600, 40, 40, 1000, mapUnitScale);
         mapHandler = new MapHandler(mapUnitScale, mainPlayer);
         mainPlayer.setCollisionLayer(mapHandler.getCollisionLayer());
         this.batch =  mapHandler.getRendererBatch();
-        hudBatch = new SpriteBatch();
         healthRenderer = new ShapeRenderer();
-        healthRenderer.setAutoShapeType(true);
     }
 
     @Override
     public void render() {
-        Gdx.gl.glClearColor(0.5f,0.5f,0.5f,0);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        Gdx.gl.glClearColor(0.5f,0.5f,0.5f,1);
+        Gdx.gl.glClear(GL30.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
 
         timePassed += Gdx.graphics.getDeltaTime();
 
@@ -82,19 +72,24 @@ public class GameMain extends Game {
             mainPlayer.draw(batch, timePassed);
         } else {
             /* main no-input handler */
-            batch.draw(mainPlayer.getStill(), mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getWidth(), mainPlayer.getHeight());
+            mainPlayer.drawStill(batch);
         }
+
+        /**  it works, don't fuck with it **/
+        dx = Gdx.input.getX() - (mainPlayer.getX() - (mapHandler.getCamera().position.x - Gdx.graphics.getWidth()/2) + mainPlayer.getWidth()/2);
+        dy = (Gdx.graphics.getHeight() - Gdx.input.getY()) - (mainPlayer.getY() + mainPlayer.getHeight()/2);
+        angle = (float)(atan(dy/dx)*(180/3.14159265358979323846264338328));
+        if(dx < 0) angle += 180;
+        mainPlayer.updateArmAngle(angle);
     }
 
     private void drawHud()
     {
-        System.out.println(mainPlayer.getHealth());
         int rectWidth = (int)(Gdx.graphics.getWidth()*(mainPlayer.getHealth()/1000f));
-        int rectHeight = Gdx.graphics.getHeight()/40;
+        int rectHeight = Gdx.graphics.getHeight()/30;
         int rectX = Gdx.graphics.getWidth()/2 - rectWidth/2;
-        float alpha = 0.0f;
+        float alpha = 0.2f;
         //healthRenderer.setColor(1,0,0,0);
-
         healthRenderer.begin(Filled);
         healthRenderer.rect(rectX, 0, rectWidth, rectHeight,
                 new Color(0,0,0,alpha),
