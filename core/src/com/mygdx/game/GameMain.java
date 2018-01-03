@@ -5,7 +5,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import java.lang.CharSequence;
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled;
 import static java.lang.Math.atan;
 
@@ -15,6 +21,7 @@ import static java.lang.Math.atan;
 
 public class GameMain extends Game {
     private Batch batch;
+    private SpriteBatch hudBatch;
     private Player mainPlayer;
     private float timePassed = 0f;
     private float mapUnitScale = 0.25f;
@@ -22,6 +29,10 @@ public class GameMain extends Game {
     private ShapeRenderer healthRenderer;
     private float angle = 0;
     private double dx, dy;
+    private List<Grenade> grenades;
+    private BitmapFont font;
+    private CharSequence healthAsText;
+
 
     @Override
     public void create () {
@@ -29,7 +40,10 @@ public class GameMain extends Game {
         mapHandler = new MapHandler(mapUnitScale, mainPlayer);
         mainPlayer.setCollisionLayer(mapHandler.getCollisionLayer());
         this.batch =  mapHandler.getRendererBatch();
+        hudBatch = new SpriteBatch();
         healthRenderer = new ShapeRenderer();
+        grenades = new ArrayList<>();
+        font = new BitmapFont();
     }
 
     @Override
@@ -40,33 +54,41 @@ public class GameMain extends Game {
         timePassed += Gdx.graphics.getDeltaTime();
 
         mapHandler.getRenderer().setView(mapHandler.getCamera());
-        mapHandler.getRenderer().getBatch().enableBlending();  //enabling blending seems to make camera panning generally much smoother
+        batch.enableBlending();  //enabling blending seems to make camera panning generally much smoother
         mapHandler.getRenderer().render();
-        drawHud();
-        mapHandler.getRendererBatch().begin();
+        batch.begin();
         inputHandler(timePassed);
+        for(Grenade grenade : grenades) {
+            grenade.updatePhysics();
+            grenade.draw(mapHandler.getRendererBatch());
+            if(grenade.isExploded()) {
+                grenades.remove(grenade);
+                break;
+            }
+        }
         mainPlayer.updatePhysics(mapHandler);
-        mapHandler.getRendererBatch().end();
+        batch.end();
+        drawHud();
     }
 
     private void inputHandler(float timePassed) {
-        if((Gdx.input.isKeyPressed(Input.Keys.SPACE)
+        if ((Gdx.input.isKeyPressed(Input.Keys.SPACE)
                 || Gdx.input.isKeyPressed(Input.Keys.W)
                 || Gdx.input.isKeyPressed(Input.Keys.UP))
-                && !mainPlayer.getJumping())	//if space is pressed and the char is not already jumping
+                && !mainPlayer.getJumping())    //if space is pressed and the char is not already jumping
         {
             /* main jumping conditional  */
             mainPlayer.jump();
         }
-        if(mainPlayer.getJumping() && (Gdx.input.isKeyPressed(Input.Keys.DOWN)) || Gdx.input.isKeyPressed(Input.Keys.S)){
+        if (mainPlayer.getJumping() && (Gdx.input.isKeyPressed(Input.Keys.DOWN)) || Gdx.input.isKeyPressed(Input.Keys.S)) {
             /* main "force down" conditional  */
             mainPlayer.forceDown();
         }
-        if(Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
             /* main left movement handler */
             mainPlayer.moveLeft();
             mainPlayer.drawVerticalMirrored(batch, timePassed);
-        } else if(Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) {
+        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) {
             /* main right movement handler */
             mainPlayer.moveRight();
             mainPlayer.draw(batch, timePassed);
@@ -76,11 +98,24 @@ public class GameMain extends Game {
         }
 
         /**  it works, don't fuck with it **/
-        dx = Gdx.input.getX() - (mainPlayer.getX() - (mapHandler.getCamera().position.x - Gdx.graphics.getWidth()/2) + mainPlayer.getWidth()/2);
-        dy = (Gdx.graphics.getHeight() - Gdx.input.getY()) - (mainPlayer.getY() + mainPlayer.getHeight()/2);
-        angle = (float)(atan(dy/dx)*(180/3.14159265358979323846264338328));
-        if(dx < 0) angle += 180;
+        dx = Gdx.input.getX() - (mainPlayer.getX() - (mapHandler.getCamera().position.x - Gdx.graphics.getWidth() / 2) + mainPlayer.getWidth() / 2);
+        dy = (Gdx.graphics.getHeight() - Gdx.input.getY()) - (mainPlayer.getY() + mainPlayer.getHeight() / 2);
+        angle = (float) (atan(dy / dx) * (180 / 3.14159265358979323846264338328));
+        if (dx < 0) angle += 180;
         mainPlayer.updateArmAngle(angle);
+
+        if (Gdx.input.justTouched()) {
+            grenades.add(new Grenade(0,
+                    angle,
+                    20,
+                    mapUnitScale,
+                    mainPlayer.getX() + mainPlayer.getWidth()/2 - mainPlayer.getWidth()/8,
+                    mainPlayer.getY() + mainPlayer.getHeight()/2 - mainPlayer.getWidth()/8,
+                    mainPlayer.getWidth() / 4,
+                    mainPlayer.getHeight() / 4,
+                    mapHandler.getCollisionLayer(),
+                    batch));
+        }
     }
 
     private void drawHud()
@@ -97,6 +132,11 @@ public class GameMain extends Game {
                 new Color(1,0,0,alpha),
                 new Color(1,0,0,alpha));
         healthRenderer.end();
+
+        healthAsText = (mainPlayer.getHealth()/10 + "%");
+        hudBatch.begin();
+        font.draw(hudBatch, healthAsText, Gdx.graphics.getWidth()/2, 20, 20, 20, false);
+        hudBatch.end();
     }
 
     @Override
@@ -105,5 +145,7 @@ public class GameMain extends Game {
         mainPlayer.dispose();
         mapHandler.dispose();
         healthRenderer.dispose();
+        for(Grenade grenade : grenades)
+            grenade.dispose();
     }
 }
