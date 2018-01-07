@@ -24,6 +24,5 @@ public interface Character{
     void moveLeft();
     void jump();
     void draw(Batch batch, float timePassed);
-    void drawVerticalMirrored(Batch batch, float timePassed);
 }
 

@@ -35,11 +35,12 @@ public class Player implements Character {
     private boolean xCollision = false;
     private TextureRegion arrow;
     private float armAngle;
+    private boolean movingRight = false;
+    private boolean movingLeft = false;
 
-    public Player(int x, int y, int width, int height, int health, float mapUnitScale)
-    {
+    public Player(int x, int y, int width, int height, int health, float mapUnitScale) {
         testAtlas = new TextureAtlas(Gdx.files.internal("rightroll.atlas"));	//atlas for main "roll" animation
-        rightRollAnimation = new Animation<TextureRegion>(1/30f, testAtlas.getRegions()); //Actual animation object (60fps)
+        rightRollAnimation = new Animation<TextureRegion>(1/60f, testAtlas.getRegions()); //Actual animation object (60fps)
         stillImg = new Texture(Gdx.files.internal("still.png"));	//texture for the "still" image (for when the character is moving neither right nor left)
         this.x = x;
         this.y = y;
@@ -49,8 +50,7 @@ public class Player implements Character {
         this.mapUnitScale = mapUnitScale;
         arrow = new TextureRegion(new Texture(Gdx.files.internal("arrow.png")));
     }
-    private ArrayList<TextureAtlas> getAllAtlasesUsed()
-    {
+    private ArrayList<TextureAtlas> getAllAtlasesUsed() {
         ArrayList<TextureAtlas> atlases = new ArrayList<>();
         atlases.add(testAtlas);
         /*
@@ -100,26 +100,25 @@ public class Player implements Character {
     {
         return jumping;
     }
-    public void moveRight()
-    {
+    public void moveRight() {
         if(velocityX < 1) velocityX += this.accelerationX;  //causes the acceleration of the player
+        movingLeft = false;
+        movingRight = true;
     }
-    public void moveLeft()
-    {
+    public void moveLeft() {
         if(velocityX > -1) velocityX -= this.accelerationX;       //causes the acceleration of the player
+        movingLeft = true;
+        movingRight = false;
     }
-    public void jump()
-    {
+    public void jump() {
         jumping = true;
         velocityY = 1;
     }
-    public void forceDown()
-    {
+    public void forceDown() {
         if (velocityY > -1f)
             velocityY += forceDownAccel;
     }
-    public void updatePhysics(MapHandler mh)
-    {
+    public void updatePhysics(MapHandler mh) {
         /*
 		main conditionals to handle the very basic "physics" that have so far been implemented
 		 */
@@ -142,15 +141,15 @@ public class Player implements Character {
             velocityY = 0;
         }
 
-        if (isAntiGrav( x + width / 2, y)) {
+        if (hasProperty( x + width / 2, y, "anti-gravity")) {
             jumping = true;
             velocityY += antiGravAccel;
         }
 
-        if (isDmgTile(x,y)
-                || isDmgTile(x+width, y)
-                || isDmgTile(x, y + height)
-                || isDmgTile(x+width, y+height)){
+        if (hasProperty(x,y,"damage")
+                || hasProperty(x+width, y,"damage")
+                || hasProperty(x, y + height,"damage")
+                || hasProperty(x+width, y+height,"damage")){
             takeDamage(5);
         }
 
@@ -159,18 +158,18 @@ public class Player implements Character {
 
         checkYcollision(oldX, oldY);
         if (velocityX < 0) {      //check for collision on the left side
-            if (isRigid(x, y) || isRigid(x, y + height)) {
-                if (!(isRigid(oldX, y) && isRigid(oldX, y + height))) {
+            if (hasProperty(x, y, "rigid") || hasProperty(x, y + height, "rigid")) {
+                //if (!(isRigid(oldX, y) && isRigid(oldX, y + height))) {
                     velocityX = 0;
                     x = oldX - (oldX % (collisionLayer.getTileWidth() * mapUnitScale)) + 1;
-                }
+                //}
             }
         } else if (velocityX > 0) {     //check for collision on the right side
-            if (isRigid(x + width, y) || isRigid(x + width, y + height)) {
-                if (!(isRigid(oldX + width, y) && isRigid(oldX + width, y + height))) {
+            if (hasProperty(x + width, y, "rigid") || hasProperty(x + width, y + height, "rigid")) {
+                //if (!(isRigid(oldX + width, y) && isRigid(oldX + width, y + height))) {
                     velocityX = 0;
                     x = x - (x + width) % (collisionLayer.getTileWidth() * mapUnitScale) - 1;
-                }
+                //}
             }
         }
         checkYcollision(oldX, oldY);
@@ -178,35 +177,22 @@ public class Player implements Character {
         if(x < 0) x = 0;
 
         //conditional for when the camera should follow the player
-        if(x > Gdx.graphics.getWidth()*(1/4f)){
-            //System.out.println("Camera condition met");
-            mh.getCamera().position.x  = this.x+Gdx.graphics.getWidth()/4f;
-
-        }
-        //mh.getCamera().position.y  = this.y;
+        if(x > Gdx.graphics.getWidth()*(1/4f)) mh.getCamera().position.x  = this.x+Gdx.graphics.getWidth()/4f;
+        //if(y > Gdx.graphics.getHeight()/2) mh.getCamera().position.y  = this.y;
         mh.getCamera().update();
     }
-    public void draw(Batch batch, float timePassed)
-    {
-        batch.draw(rightRollAnimation.getKeyFrame(timePassed, true), x, y, width, height);
-        drawArm(batch);
-    }
-    public void drawVerticalMirrored(Batch batch, float timePassed)
-    {
-        batch.draw(rightRollAnimation.getKeyFrame(timePassed,true), x+width, y, -width, height);
-        drawArm(batch);
-    }
-    public void drawStill(Batch batch)
-    {
-        batch.draw(stillImg, x, y, width, height);
-        drawArm(batch);
-    }
-    private void drawArm(Batch batch)
-    {
+    public void draw(Batch batch, float timePassed){
+        if(movingRight)
+            batch.draw(rightRollAnimation.getKeyFrame(timePassed, true), x, y, width, height);
+        else if(movingLeft)
+            batch.draw(rightRollAnimation.getKeyFrame(timePassed,true), x+width, y, -width, height);
+        else
+            batch.draw(stillImg, x, y, width, height);
+
+        //draw the arm over top of the running or still  animation
         batch.draw(arrow, x,y,width/2,height/2, width, height, 2, 2, armAngle);
     }
-    public void dispose()
-    {
+    public void dispose() {
         //disposes of all the atlases used in this file
         ArrayList<TextureAtlas> atlasList = getAllAtlasesUsed();
         for(TextureAtlas atlas : atlasList) {
@@ -217,51 +203,44 @@ public class Player implements Character {
         }
 
     }
-    private boolean isUnpassable(float x, float y) {
+    private boolean hasProperty(float x, float y, String property) {
+        //takes in world coordinates and converts to tile coordinates
+        //for example, if the tile size is 100 and the input coordinates are (150,50),
+        //tile coordinates are (1,0). This is required to access individual tile properties
         float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
         float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
-        if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
-        else {
-            return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("rigid")
-                    || collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("platform"));
-        }
-    }
-    private boolean isRigid(float x, float y) {
-        float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
-        float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
-        if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
-        else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("rigid"));
-    }
-    private boolean isAntiGrav(float x, float y) {
-        float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
-        float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
-        if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
-        else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("anti-gravity"));
-    }
-    private boolean isDmgTile(float x, float y) {
-        float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
-        float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
-        if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;
-        else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey("damage"));
+        if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;  //if we don't check for null cells, the next line will give a null pointer exception
+        else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey(property));  //get the boolean of whether the tile has the input property
     }
     private void checkYcollision(float oldX, float oldY) {
         if (velocityY < 0) {
-            if (isUnpassable(x, y-1) || isUnpassable(x + width, y-1)) {
-                if (!isUnpassable(x, oldY) && !isUnpassable(x + width, oldY)) {
+            //case where player is currently falling
+            float nearestYborder = oldY - oldY % (collisionLayer.getTileHeight() * mapUnitScale);
+            if (hasProperty(x, y-1, "rigid") || hasProperty(x + width, y-1, "rigid")){
+                if (!(hasProperty(x, oldY, "rigid") || hasProperty(x + width, oldY, "rigid"))){
                     velocityY = 0;
-                    y = oldY - oldY % (collisionLayer.getTileHeight() * mapUnitScale);
+                    y = nearestYborder;
                     jumping = false;
                 }
             }
+            if (hasProperty(x, y-1, "platform") || hasProperty(x + width, y-1, "platform")) {
+                if(y < nearestYborder){
+                    velocityY = 0;
+                    y =nearestYborder;
+                    jumping = false;
+                }
+            }
+
+
         } else if (velocityY > 0) {   //velocityY is positive, which means the character is traveling upward
-            if (isRigid(x, y + height) || isRigid(x + width, y + height)) {
-                if (isRigid(oldX, y + height) || isRigid(oldX + width, y + height)) {
+            if (hasProperty(x, y + height, "rigid") || hasProperty(x + width, y + height, "rigid")) {
+                if (hasProperty(oldX, y + height, "rigid") || hasProperty(oldX + width, y + height, "rigid")) {
                     velocityY = 0;
                     y = y - (y + height) % (collisionLayer.getTileHeight() * mapUnitScale) - 1;
                 }
             }
         } else {
-            if (!(isUnpassable(x, y - 1)))
+            if (!(hasProperty(x, y - 1, "rigid") || hasProperty(x, y-1, "platform")))
                 jumping = true;
         }
     }
@@ -274,5 +253,9 @@ public class Player implements Character {
     public void updateArmAngle(double angle)
     {
         armAngle = (float) angle;
+    }
+    public void noInput(){
+        movingRight = false;
+        movingLeft = false;
     }
 }
