@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import java.lang.CharSequence;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,71 +17,102 @@ import static java.lang.Math.atan;
  **/
 
 public class GameMain extends Game {
+    //main Batch object for rendering the map, the player, grenades, bullets, etc
     private Batch batch;
+    //Spritebatch for rendering the background image
+    private SpriteBatch backgroundBatch;
+    //Spritebatch for rendering the hud elements
     private SpriteBatch hudBatch;
+    //the main player
     private Player mainPlayer;
+    //timePassed variable. Used to keep track of the differential time for animations
     private float timePassed = 0f;
+    //unit scale of the map. Ex) tileSize=180px, mapUnitScale=0.25f, actual tile size = 180px*0.25 = 45px
     private float mapUnitScale = 0.25f;
+    //mapHandler object to handle getting the map, creating the renderer, fetching the collision layer, etc
     private MapHandler mapHandler;
-    private ShapeRenderer healthRenderer;
+    //angle of the arm on the player
     private float angle = 0;
+    //x and y distances between the mouse pointer and the arm of the player
     private double dx, dy;
+    //list of grenades to be rendered
     private List<Grenade> grenades;
+    //font used to display the health number on the health bar
     private BitmapFont font;
+    //the character sequence to print the character's health over the health bar
     private CharSequence healthAsText;
+    //boolean for keeping track of whether or not the player should be able to throw a grenade based on mouse presses
     private boolean grenadeSpawnable = true;
+    //boolean to keep track of whether or not the game is paused
     private boolean paused = false;
-
-
+    //Texture to display the background image
+    private Texture backgroundTexture;
     @Override
     public void create () {
+        //instantiate the main player
         mainPlayer = new Player(0, 600, 40, 40, 1000, mapUnitScale);
-        mapHandler = new MapHandler(mapUnitScale, mainPlayer);
+        //create the mapHandler
+        mapHandler = new MapHandler(mapUnitScale);
+        //pass the collision layer to the player so that it can be used for collision detection
         mainPlayer.setCollisionLayer(mapHandler.getCollisionLayer());
+        //set the batch for this class to the batch used to render the map
         this.batch =  mapHandler.getRendererBatch();
+        //instantiate the SpriteBatch for the hud
         hudBatch = new SpriteBatch();
-        healthRenderer = new ShapeRenderer();
+        //instantiate the batch for the background
+        backgroundBatch = new SpriteBatch();
+        //keep a list of grenades to be rendered
         grenades = new ArrayList<>();
+        //instantiate the font for the health bar
         font = new BitmapFont();
+        //instantiate the background spriteBatch
+        backgroundTexture = new Texture(Gdx.files.internal("maps/test_landscape.png"));
     }
-
     @Override
     public void render() {
+        /*------ main rendering loop ------*/
+        //set the default background color and do some other openGL nonsense
         Gdx.gl.glClearColor(0.5f, 0.5f, 0.5f, 1);
         Gdx.gl.glClear(GL30.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
 
+        //update the global timepassed variable to update the framing for animations
         timePassed += Gdx.graphics.getDeltaTime();
 
+        //process of drawing the background texture on the background SpriteBatch
+        backgroundBatch.begin();
+        //backgroundBatch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        backgroundBatch.end();
+
+        //Set the map renderer to render in the view of the camera
         mapHandler.getRenderer().setView(mapHandler.getCamera());
         batch.enableBlending();  //enabling blending seems to make camera panning generally much smoother
-        mapHandler.getRenderer().render();
-        batch.begin();
+        mapHandler.getRenderer().render();  //actually render the map
+        batch.begin();      //begin the main batch drawing process
 
+        //draw the main player. This method call alone handles whether the player should be drawn backwards, forwards, or still
         mainPlayer.draw(batch, timePassed);
+        //draw each grenade
         for(Grenade grenade : grenades) grenade.draw(batch);
 
-        if(!paused){
-            hudBatch.setColor(1,1,1,1);
-            inputHandler(timePassed);
-            for (int i = 0; i < grenades.size(); i++) {
-                grenades.get(i).updatePhysics();
-                //grenades.get(i).draw(mapHandler.getRendererBatch());
-                if (grenades.get(i).isExploded()) {
-                    grenades.get(i).dispose();
-                    grenades.remove(i);
-                    i++;
-                    //break;
+        if(!paused){        //this stuff should only be done when the game is not paused
+            hudBatch.setColor(1,1,1,1);    //set the color of everything to be normal
+            inputHandler();                             //main input handling
+            for (int i = 0; i < grenades.size(); i++) { //for each grenade
+                grenades.get(i).updatePhysics();        //update the physics of the grenade
+                if (grenades.get(i).isExploded()) {     //if the grenade has exploded
+                    grenades.get(i).dispose();          //dispose of it
+                    grenades.remove(i);                 //and remove it from the list
+                    i++;                                //and increment the loop counter so that there's no nullpointer nonsense happening
                 }
             }
-            mainPlayer.updatePhysics(mapHandler);
+            mainPlayer.updatePhysics(mapHandler);       //update the physics of the main player
         }
-        batch.end();
+        batch.end();                                    //stop drawing on the main batch
         drawHud();
-        if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) paused = !paused;
-        if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) Gdx.app.exit();
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) paused = !paused;  //pause game input handler
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) Gdx.app.exit();   //end game input handler
     }
-
-    private void inputHandler(float timePassed) {
+    private void inputHandler() {
         if ((Gdx.input.isKeyPressed(Input.Keys.SPACE)
                 || Gdx.input.isKeyPressed(Input.Keys.W)
                 || Gdx.input.isKeyPressed(Input.Keys.UP))
@@ -127,39 +157,48 @@ public class GameMain extends Game {
                         mainPlayer.getWidth() / 4,
                         mainPlayer.getHeight() / 4,
                         mapHandler.getCollisionLayer(),
-                        batch));
+                        batch,
+                        mainPlayer));
             /* We don't want the player to be able to spawn any new grenades until the key is released and pressed again
             so, set spawnable to false unless the button is not pressed  */
             grenadeSpawnable = false;
         }
         else grenadeSpawnable = true;
     }
-
     private void drawHud() {
+        //width of the rectangle should be the full width of the screen multiplied by the percentage of the player's health left
         int rectWidth = (int) (Gdx.graphics.getWidth() * (mainPlayer.getHealth() / 1000f));
+        //height of the rectangle should be 1/30th of the total height of the window
         int rectHeight = Gdx.graphics.getHeight() / 30;
+        //x offset of the rectangle in order to center it on screen
         int rectX = Gdx.graphics.getWidth() / 2 - rectWidth / 2;
+        //opacity of the healthbar
         float alpha = 0.6f;
+        //image of the healthbar
         Texture health = new Texture(Gdx.files.internal("healthGradient.png"));
+        //text to be displayed on the center of the healthbar
         healthAsText = (mainPlayer.getHealth() / 10 + "%");
-        hudBatch.begin();
-        if (!paused) {
-            hudBatch.setColor(1, 0, 0, alpha);
-            hudBatch.draw(health, rectX, 0, rectWidth, rectHeight);
+        hudBatch.begin();       //start the drawing process on the hudbatch
+        if (!paused) {          //if the game is not paused
+            hudBatch.setColor(1, 1, 1, alpha);  //set the alpha channel
+            hudBatch.draw(health, rectX, 0, rectWidth, rectHeight); //actually draw the health bar
+            //draw the text that goes over the health bar
             font.draw(hudBatch, healthAsText, Gdx.graphics.getWidth() / 2, 20, 20, 20, false);
         } else {
+            //if the game is paused, display a half opaque black box over the whole screen
             hudBatch.setColor(1, 1, 1, 0.5f);
             hudBatch.draw(new Texture(Gdx.files.internal("blackbox.png")), 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         }
-        hudBatch.end();
+        hudBatch.end();     //stop drawing on the hudbatch
     }
-
     @Override
     public void dispose () {
         //method to make garbage collection more efficient
+        //any object that implements disposable should be seen here
         mainPlayer.dispose();
+        backgroundBatch.dispose();
+        backgroundTexture.dispose();
         mapHandler.dispose();
-        healthRenderer.dispose();
         for(Grenade grenade : grenades)
             grenade.dispose();
     }

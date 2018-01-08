@@ -2,11 +2,13 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 
 import java.util.ArrayList;
-
 /**
  * Created by Dylan Bish on 12/21/17.
  */
@@ -32,13 +34,13 @@ public class Player implements Character {
     private float antiGravAccel = 0.1f;
     private float forceDownAccel = -0.39f;
     private boolean jumping = true;
-    private boolean xCollision = false;
     private TextureRegion arrow;
     private float armAngle;
     private boolean movingRight = false;
     private boolean movingLeft = false;
+    private boolean xCollision = false;
 
-    public Player(int x, int y, int width, int height, int health, float mapUnitScale) {
+    Player(int x, int y, int width, int height, int health, float mapUnitScale) {
         testAtlas = new TextureAtlas(Gdx.files.internal("rightroll.atlas"));	//atlas for main "roll" animation
         rightRollAnimation = new Animation<TextureRegion>(1/60f, testAtlas.getRegions()); //Actual animation object (60fps)
         stillImg = new Texture(Gdx.files.internal("still.png"));	//texture for the "still" image (for when the character is moving neither right nor left)
@@ -96,9 +98,13 @@ public class Player implements Character {
     {
         return this.y;
     }
-    public boolean getJumping()
-    {
-        return jumping;
+    public boolean getJumping() {
+        if((hasProperty(x,y,"water") && hasProperty(x+width,y,"water"))
+            || (hasProperty(x,y-1,"water") && hasProperty(x+width,y-1,"water"))){
+            return false;
+        }else {
+            return jumping;
+        }
     }
     public void moveRight() {
         if(velocityX < 1) velocityX += this.accelerationX;  //causes the acceleration of the player
@@ -125,51 +131,62 @@ public class Player implements Character {
         float oldX = x;
         float oldY = y;
 
-        if (velocityX != 0 && !xCollision)
+        if((hasProperty(x,y,"water") && hasProperty(x+width,y,"water"))
+            || (hasProperty(x,y-1,"water") && hasProperty(x+width,y-1,"water")))
         {
+            if(velocityY > 0.2f) velocityY = .2f;
+            if(velocityY < -0.2f) velocityY = -0.2f;
+            if(velocityX > 0.2f) velocityX = 0.2f;
+            if(velocityX < -0.2f) velocityX = -0.2f;
+            y += (jumpSpeed*velocityY);
+            velocityY += gravity/10;
             x += moveSpeed * velocityX;
-            velocityX /= (1+damping_factor);
+            velocityX /= (1 + damping_factor*2);
+        }else {
+            if(!xCollision) {
+                x += moveSpeed * velocityX;
+                velocityX /= (1 + damping_factor);
+            }
+
+            if (jumping) {
+                y += jumpSpeed * velocityY;
+                velocityY += gravity; //apply acceleration due to gravity
+            }
+
+            if (y < 0) {
+                jumping = false;
+                velocityY = 0;
+            }
+
+            if (hasProperty(x + width / 2, y, "anti-gravity")) {
+                jumping = true;
+                velocityY += antiGravAccel;
+            }
+
+            if (hasProperty(x, y, "damage")
+                    || hasProperty(x + width, y, "damage")
+                    || hasProperty(x, y + height, "damage")
+                    || hasProperty(x + width, y + height, "damage")) {
+                takeDamage(5);
+            }
+
+            if (velocityY < -1f) velocityY = -1f;
+            if (velocityY > 1f) velocityY = 1f;
         }
 
-        if(jumping){
-            y += jumpSpeed * velocityY;
-            velocityY += gravity; //apply acceleration due to gravity
-        }
-
-        if (y < 0){
-            jumping = false;
-            velocityY = 0;
-        }
-
-        if (hasProperty( x + width / 2, y, "anti-gravity")) {
-            jumping = true;
-            velocityY += antiGravAccel;
-        }
-
-        if (hasProperty(x,y,"damage")
-                || hasProperty(x+width, y,"damage")
-                || hasProperty(x, y + height,"damage")
-                || hasProperty(x+width, y+height,"damage")){
-            takeDamage(5);
-        }
-
-        if (velocityY < -1f) velocityY = -1f;
-        if (velocityY > 1f) velocityY = 1f;
-
+        xCollision = false;
         checkYcollision(oldX, oldY);
         if (velocityX < 0) {      //check for collision on the left side
             if (hasProperty(x, y, "rigid") || hasProperty(x, y + height, "rigid")) {
-                //if (!(isRigid(oldX, y) && isRigid(oldX, y + height))) {
-                    velocityX = 0;
-                    x = oldX - (oldX % (collisionLayer.getTileWidth() * mapUnitScale)) + 1;
-                //}
+                velocityX = 0;
+                x = oldX - (oldX % (collisionLayer.getTileWidth() * mapUnitScale)) + 1;
+                xCollision = true;
             }
         } else if (velocityX > 0) {     //check for collision on the right side
             if (hasProperty(x + width, y, "rigid") || hasProperty(x + width, y + height, "rigid")) {
-                //if (!(isRigid(oldX + width, y) && isRigid(oldX + width, y + height))) {
-                    velocityX = 0;
-                    x = x - (x + width) % (collisionLayer.getTileWidth() * mapUnitScale) - 1;
-                //}
+                velocityX = 0;
+                x = x - (x + width) % (collisionLayer.getTileWidth() * mapUnitScale) - 1;
+                xCollision = true;
             }
         }
         checkYcollision(oldX, oldY);
@@ -240,7 +257,8 @@ public class Player implements Character {
                 }
             }
         } else {
-            if (!(hasProperty(x, y - 1, "rigid") || hasProperty(x, y-1, "platform")))
+            if (!(hasProperty(x, y - 1, "rigid") || hasProperty(x+width, y-1, "rigid"))
+                && !(hasProperty(x, y - 1, "platform") || hasProperty(x+width, y-1, "platform")))
                 jumping = true;
         }
     }
