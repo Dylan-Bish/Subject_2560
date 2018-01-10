@@ -1,9 +1,7 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
 
 /**
  * Created by Dylan Bish on 12/21/17.
@@ -13,16 +11,16 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 public interface Character{
     int health = 0;
     int grenades = 0;
-    void setGrenades(int grenades);
-    Animation<TextureRegion> getRightAnimation();
 
+    //method to update the collision detection, acceleration, velocity, etc of the character
     void updatePhysics(MapHandler mh);
+    //dispose of all textures, texturatlases, or anything in the class that implements disposable
     void dispose();
-    int getGrenades();
-    void setHealth(int health);
+    /* main motion methods for the character */
     void moveRight();
     void moveLeft();
     void jump();
+    //draw the character. This should handle the difference between drawing the character facing left, right, still, jumping, etc.
     void draw(Batch batch, float timePassed);
 }
 

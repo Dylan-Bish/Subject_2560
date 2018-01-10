@@ -37,6 +37,7 @@ public class GameMain extends Game {
     private double dx, dy;
     //list of grenades to be rendered
     private List<Grenade> grenades;
+    private List<Bullet> bullets;
     //font used to display the health number on the health bar
     private BitmapFont font;
     //the character sequence to print the character's health over the health bar
@@ -61,8 +62,9 @@ public class GameMain extends Game {
         hudBatch = new SpriteBatch();
         //instantiate the batch for the background
         backgroundBatch = new SpriteBatch();
-        //keep a list of grenades to be rendered
+        //keep lists of grenades and bullets to be rendered
         grenades = new ArrayList<>();
+        bullets = new ArrayList<>();
         //instantiate the font for the health bar
         font = new BitmapFont();
         //instantiate the background spriteBatch
@@ -72,7 +74,7 @@ public class GameMain extends Game {
     public void render() {
         /*------ main rendering loop ------*/
         //set the default background color and do some other openGL nonsense
-        Gdx.gl.glClearColor(0.5f, 0.5f, 0.5f, 1);
+        Gdx.gl.glClearColor(0,0,0,1);
         Gdx.gl.glClear(GL30.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
 
         //update the global timepassed variable to update the framing for animations
@@ -90,19 +92,30 @@ public class GameMain extends Game {
         batch.begin();      //begin the main batch drawing process
 
         //draw the main player. This method call alone handles whether the player should be drawn backwards, forwards, or still
-        mainPlayer.draw(batch, timePassed);
+        if(!mainPlayer.isDead)
+            mainPlayer.draw(batch, timePassed);
         //draw each grenade
         for(Grenade grenade : grenades) grenade.draw(batch);
+        for(Bullet bullet : bullets) bullet.draw();
 
         if(!paused){        //this stuff should only be done when the game is not paused
             hudBatch.setColor(1,1,1,1);    //set the color of everything to be normal
-            inputHandler();                             //main input handling
+            if(!mainPlayer.isDead)
+                inputHandler();                         //main input handling
             for (int i = 0; i < grenades.size(); i++) { //for each grenade
                 grenades.get(i).updatePhysics();        //update the physics of the grenade
                 if (grenades.get(i).isExploded()) {     //if the grenade has exploded
                     grenades.get(i).dispose();          //dispose of it
                     grenades.remove(i);                 //and remove it from the list
                     i++;                                //and increment the loop counter so that there's no nullpointer nonsense happening
+                }
+            }
+            for(int i = 0; i < bullets.size(); i++){
+                bullets.get(i).updatePhysics();
+                if(bullets.get(i).isDead()){
+                    bullets.get(i).dispose();
+                    bullets.remove(i);
+                    i++;
                 }
             }
             mainPlayer.updatePhysics(mapHandler);       //update the physics of the main player
@@ -144,11 +157,11 @@ public class GameMain extends Game {
         mainPlayer.updateArmAngle(angle);
 
         //middle mouse button press
-        if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+        if (Gdx.input.isButtonPressed(Input.Buttons.MIDDLE)) {
             //if the grenade key is not already being held down
             if(grenadeSpawnable)
                 //spawn a new grenade
-                grenades.add(new Grenade(0,
+                grenades.add(new Grenade(10,
                         angle,
                         20,
                         mapUnitScale,
@@ -162,8 +175,20 @@ public class GameMain extends Game {
             /* We don't want the player to be able to spawn any new grenades until the key is released and pressed again
             so, set spawnable to false unless the button is not pressed  */
             grenadeSpawnable = false;
+        }else grenadeSpawnable = true;
+        if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+            bullets.add(new Bullet(0,
+                    20,
+                    (int)angle,
+                    mainPlayer.getX() + mainPlayer.getWidth()/2 - mainPlayer.getWidth()/16,
+                    mainPlayer.getY() + mainPlayer.getHeight()/2 - mainPlayer.getHeight()/16,
+                    4,
+                    mainPlayer.getWidth() / 8,
+                    mainPlayer.getHeight() / 8,
+                    mapHandler.getCollisionLayer(),
+                    batch,
+                    mapUnitScale));
         }
-        else grenadeSpawnable = true;
     }
     private void drawHud() {
         //width of the rectangle should be the full width of the screen multiplied by the percentage of the player's health left

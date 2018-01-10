@@ -16,6 +16,6 @@ public abstract class Weapon {
     }
 
     public void setBullet(int damage, int velocity, int idealAngle, Vector2 initialPoint, int variationAngle) {
-        _bullet = new Bullet(damage, velocity, idealAngle, initialPoint, variationAngle);
+        //_bullet = new Bullet(damage, velocity, idealAngle, initialPoint, variationAngle);
     }
 }

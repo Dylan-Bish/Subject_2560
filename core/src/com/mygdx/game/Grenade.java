@@ -161,9 +161,9 @@ public class Grenade {
             if(((abs(mainPlayer.getX()-x) < radius) && (abs(mainPlayer.getY()-y) < radius))
               ||(abs((mainPlayer.getX()+mainPlayer.getWidth())-x) < radius && (abs(mainPlayer.getY()-y) < radius))
               ||(abs(mainPlayer.getX()-x) < radius) && (abs((mainPlayer.getY()+mainPlayer.getHeight())-y) < radius)
-              ||(abs((mainPlayer.getX()+mainPlayer.getWidth())-x) < radius && (abs((mainPlayer.getY()+mainPlayer.getHeight())-y) < radius)))
-                mainPlayer.takeDamage(2*counter);
-
+              ||(abs((mainPlayer.getX()+mainPlayer.getWidth())-x) < radius && (abs((mainPlayer.getY()+mainPlayer.getHeight())-y) < radius))) {
+                mainPlayer.takeDamage(damage);
+            }
             batch.draw(explosionTexture, x-radius, y-radius, 2*radius, 2*radius);
         }else {
             exploded = true;

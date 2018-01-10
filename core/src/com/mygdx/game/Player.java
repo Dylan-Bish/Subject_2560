@@ -39,6 +39,7 @@ public class Player implements Character {
     private boolean movingRight = false;
     private boolean movingLeft = false;
     private boolean xCollision = false;
+    public boolean isDead = false;
 
     Player(int x, int y, int width, int height, int health, float mapUnitScale) {
         testAtlas = new TextureAtlas(Gdx.files.internal("rightroll.atlas"));	//atlas for main "roll" animation
@@ -197,6 +198,12 @@ public class Player implements Character {
         if(x > Gdx.graphics.getWidth()*(1/4f)) mh.getCamera().position.x  = this.x+Gdx.graphics.getWidth()/4f;
         //if(y > Gdx.graphics.getHeight()/2) mh.getCamera().position.y  = this.y;
         mh.getCamera().update();
+
+        if(this.health <= 0)
+        {
+            isDead = true;
+            kill();
+        }
     }
     public void draw(Batch batch, float timePassed){
         if(movingRight)
@@ -275,5 +282,8 @@ public class Player implements Character {
     public void noInput(){
         movingRight = false;
         movingLeft = false;
+    }
+    private void kill(){
+        this.dispose();
     }
 }
