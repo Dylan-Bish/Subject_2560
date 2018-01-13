@@ -1,17 +1,20 @@
-package com.mygdx.game;
+package com.mygdx.game.Entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.mygdx.game.Entities.Entity;
+
 import java.util.Random;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.Math.toRadians;
+import static java.lang.Math.pow;
 
-public class Bullet {
+public class Bullet implements Entity {
 
     //current coordinates of the bullet
     private float x,y;
@@ -23,7 +26,7 @@ public class Bullet {
     private float velocityX, velocityY;
 
     //Actual angle of the bullet
-    private int angle;
+    private float angle;
 
     //Raw damage done by bullet
     private int _damage;
@@ -37,18 +40,17 @@ public class Bullet {
     //the scaling factor of the map. Needed for collision detection
     private float mapUnitScale;
 
-    //batch to draw the bullet on
-    private Batch batch;
-
     //boolean to check whether the bullet still needs to be rendered or updated or anything
     private boolean isDead = false;
 
-    Bullet(int damage, int velocity, int idealAngle, float x, float y, int variationAngle, float width, float height, TiledMapTileLayer collisionLayer, Batch batch, float mapUnitScale) {
+    public Bullet(int damage, int velocity, float idealAngle, float x, float y, float variationAngle, float width, float height, TiledMapTileLayer collisionLayer, float mapUnitScale) {
         _damage = damage;
 
         //calculate the actual angle of this bullet based on the ideal, variation, and some randomness
         Random rand = new Random();
-        angle = idealAngle + (rand.nextInt(2*variationAngle)-variationAngle);
+        angle = idealAngle + (rand.nextFloat()*2*variationAngle-variationAngle);
+
+        velocity += (velocity/6)*pow(-1,rand.nextInt(200)-100)*rand.nextFloat();
 
         // Split the initial velocity and angle into x and y components
         velocityX = (float)(velocity*cos(toRadians(angle)));
@@ -62,17 +64,46 @@ public class Bullet {
         this.x = x;
         this.y = y;
         this.collisionLayer = collisionLayer;
-        this.batch = batch;
         this.mapUnitScale = mapUnitScale;
     }
     public void updatePhysics(){
+        float oldX = x;
+        float oldY = y;
+
         x += velocityX;
         y += velocityY;
-        if(x < 0 || y < 0 || x > Gdx.graphics.getWidth() || y > Gdx.graphics.getHeight()) isDead = true;
+
+        if(velocityY > 0){
+            float nearestYborder = y - y % (collisionLayer.getTileHeight() * mapUnitScale);
+            if(oldY < nearestYborder){
+                if(hasProperty(oldX, oldY, "platform")) {
+                    y = nearestYborder;
+                    isDead = true;
+                }
+            }
+        }
+        if(velocityY < 0){
+            float nearestYborder = oldY - oldY % (collisionLayer.getTileHeight() * mapUnitScale);
+            if(y < nearestYborder){
+                if(hasProperty(x, y, "platform")) {
+                    y = nearestYborder;
+                    isDead = true;
+                }
+            }
+        }
+        if(hasProperty(x,y,"rigid")){
+            x = oldX;
+            y = oldY;
+            isDead = true;
+        }
+
+        if(x < 0 || y < 0
+                || x > collisionLayer.getWidth()*collisionLayer.getTileWidth()*mapUnitScale
+                || y > collisionLayer.getHeight()*collisionLayer.getTileHeight()*mapUnitScale)
+            isDead = true;
 
     }
-    public void draw()
-    {
+    public void draw(Batch batch) {
         batch.draw(new TextureRegion(image), x, y,width/2,height/2, width, height, 1, 1, angle);
     }
     private boolean hasProperty(float x, float y, String property) {
@@ -90,5 +121,4 @@ public class Bullet {
     public void dispose(){
         image.dispose();
     }
-
 }

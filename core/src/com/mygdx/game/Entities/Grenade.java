@@ -1,14 +1,17 @@
-package com.mygdx.game;
+package com.mygdx.game.Entities;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.mygdx.game.Entities.Entity;
+import com.mygdx.game.Player;
+
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.Math.toRadians;
 import static java.lang.Math.abs;
 
-public class Grenade {
+public class Grenade implements Entity {
 
     private float x,y;
     private int damage;
@@ -28,7 +31,7 @@ public class Grenade {
     private TiledMapTileLayer collisionLayer;
     private Player mainPlayer;
 
-    Grenade(int damage, float angleDeg, int initialVelocity, float mapUnitScale, float initialX, float initialY, float width, float height, TiledMapTileLayer collisionLayer, Batch batch, Player mainPlayer) {
+    public Grenade(int damage, float angleDeg, int initialVelocity, float mapUnitScale, float initialX, float initialY, float width, float height, TiledMapTileLayer collisionLayer, Batch batch, Player mainPlayer) {
         // need the map unit scale for the collision detection of the grenades
         this.mapUnitScale = mapUnitScale;
         this.damage = damage;
@@ -99,7 +102,6 @@ public class Grenade {
                     x = x - (x + width) % (collisionLayer.getTileWidth() * mapUnitScale) - 1;
                 }
             }
-            checkYcollision(oldX, oldY);
 
             if (x < 0) x = 0;
             if (counter >= 242) {
@@ -170,7 +172,7 @@ public class Grenade {
             this.dispose();
         }
     }
-    public boolean isExploded()
+    public boolean isDead()
     {
         return exploded;
     }

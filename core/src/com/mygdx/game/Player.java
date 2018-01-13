@@ -40,6 +40,7 @@ public class Player implements Character {
     private boolean movingLeft = false;
     private boolean xCollision = false;
     public boolean isDead = false;
+    public boolean isFacingRight = true;
 
     Player(int x, int y, int width, int height, int health, float mapUnitScale) {
         testAtlas = new TextureAtlas(Gdx.files.internal("rightroll.atlas"));	//atlas for main "roll" animation
@@ -51,7 +52,7 @@ public class Player implements Character {
         this.height = height;
         this.health = health;
         this.mapUnitScale = mapUnitScale;
-        arrow = new TextureRegion(new Texture(Gdx.files.internal("arrow.png")));
+        arrow = new TextureRegion(new Texture(Gdx.files.internal("guntest.png")));
     }
     private ArrayList<TextureAtlas> getAllAtlasesUsed() {
         ArrayList<TextureAtlas> atlases = new ArrayList<>();
@@ -63,10 +64,6 @@ public class Player implements Character {
          */
         return atlases;
     }
-    public Animation<TextureRegion> getRightAnimation()
-    {
-        return rightRollAnimation;
-    }
     public void setGrenades(int grenades)
     {
         this.grenades = grenades;
@@ -74,10 +71,6 @@ public class Player implements Character {
     public int getGrenades()
     {
         return this.grenades;
-    }
-    public void setHealth(int health)
-    {
-        this.health = health;
     }
     public int getHealth()
     {
@@ -171,6 +164,12 @@ public class Player implements Character {
                 takeDamage(5);
             }
 
+            //X and Y velocity clamping
+            if(isFacingRight != movingRight) {  //if player is not facing the same direction as they are moving
+                if(velocityX > 0.5f) velocityX = 0.5f;
+                if(velocityX < -0.5f) velocityX = -0.5f;
+            }
+            //we want to clamp these values so that one updatePhysics iteration can't move the player all the way through a tile
             if (velocityY < -1f) velocityY = -1f;
             if (velocityY > 1f) velocityY = 1f;
         }
@@ -214,7 +213,10 @@ public class Player implements Character {
             batch.draw(stillImg, x, y, width, height);
 
         //draw the arm over top of the running or still  animation
-        batch.draw(arrow, x,y,width/2,height/2, width, height, 2, 2, armAngle);
+        if(isFacingRight)
+            batch.draw(arrow, x,y,width/2,height/2, width, height, 2, 2, armAngle);
+        else
+            batch.draw(arrow, x,y,width/2,height/2, width, height, -2, 2, armAngle+180);
     }
     public void dispose() {
         //disposes of all the atlases used in this file

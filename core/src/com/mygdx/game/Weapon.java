@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.math.Vector2;
+import com.mygdx.game.Entities.Bullet;
 
 public abstract class Weapon {
 
