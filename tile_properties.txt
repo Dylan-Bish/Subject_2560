@@ -2,3 +2,6 @@
 "rigid"
 "anti-gravity"
 "water"
+"drop"
+  -"ammo"
+  -"health"
