@@ -15,8 +15,10 @@ import java.util.ArrayList;
 public class Player implements Character {
     private TiledMapTileLayer collisionLayer;
     private Texture stillImg;
+    public int bullets =  100;
     private int health;
-    private int grenades;
+    private int maxHealth;
+    public  int grenades = 5;
     private TextureAtlas testAtlas;
     private Animation<TextureRegion> rightRollAnimation;
     private float x;
@@ -38,11 +40,11 @@ public class Player implements Character {
     private float armAngle;
     private boolean movingRight = false;
     private boolean movingLeft = false;
-    private boolean xCollision = false;
     public boolean isDead = false;
     public boolean isFacingRight = true;
+    private Level level;
 
-    Player(int x, int y, int width, int height, int health, float mapUnitScale) {
+    Player(int x, int y, int width, int height, int maxHealth, float mapUnitScale, Level level) {
         testAtlas = new TextureAtlas(Gdx.files.internal("rightroll.atlas"));	//atlas for main "roll" animation
         rightRollAnimation = new Animation<TextureRegion>(1/60f, testAtlas.getRegions()); //Actual animation object (60fps)
         stillImg = new Texture(Gdx.files.internal("still.png"));	//texture for the "still" image (for when the character is moving neither right nor left)
@@ -50,8 +52,10 @@ public class Player implements Character {
         this.y = y;
         this.width = width;
         this.height = height;
-        this.health = health;
+        this.maxHealth = maxHealth;
+        health = maxHealth;
         this.mapUnitScale = mapUnitScale;
+        this.level = level;
         arrow = new TextureRegion(new Texture(Gdx.files.internal("guntest.png")));
     }
     private ArrayList<TextureAtlas> getAllAtlasesUsed() {
@@ -93,8 +97,8 @@ public class Player implements Character {
         return this.y;
     }
     public boolean getJumping() {
-        if((hasProperty(x,y,"water") && hasProperty(x+width,y,"water"))
-            || (hasProperty(x,y-1,"water") && hasProperty(x+width,y-1,"water"))){
+        if((level.hasProperty(x,y,"water") && level.hasProperty(x+width,y,"water"))
+            || (level.hasProperty(x,y-1,"water") && level.hasProperty(x+width,y-1,"water"))){
             return false;
         }else {
             return jumping;
@@ -118,15 +122,15 @@ public class Player implements Character {
         if (velocityY > -1f)
             velocityY += forceDownAccel;
     }
-    public void updatePhysics(MapHandler mh) {
+    public void updatePhysics(Level level) {
         /*
-		main conditionals to handle the very basic "physics" that have so far been implemented
+		main conditionals to handle the very basic physics and collision detection that have so far been implemented
 		 */
         float oldX = x;
         float oldY = y;
 
-        if((hasProperty(x,y,"water") && hasProperty(x+width,y,"water"))
-            || (hasProperty(x,y-1,"water") && hasProperty(x+width,y-1,"water")))
+        if((level.hasProperty(x,y,"water") && level.hasProperty(x+width,y,"water"))
+            || (level.hasProperty(x,y-1,"water") && level.hasProperty(x+width,y-1,"water")))
         {
             if(velocityY > 0.2f) velocityY = .2f;
             if(velocityY < -0.2f) velocityY = -0.2f;
@@ -137,11 +141,10 @@ public class Player implements Character {
             x += moveSpeed * velocityX;
             velocityX /= (1 + damping_factor*2);
         }else {
-            if(!xCollision) {
+            //if(!xCollision) {
                 x += moveSpeed * velocityX;
                 velocityX /= (1 + damping_factor);
-            }
-
+            //}
             if (jumping) {
                 y += jumpSpeed * velocityY;
                 velocityY += gravity; //apply acceleration due to gravity
@@ -152,51 +155,36 @@ public class Player implements Character {
                 velocityY = 0;
             }
 
-            if (hasProperty(x + width / 2, y, "anti-gravity")) {
+            if (level.hasProperty(x + width / 2, y+1, "anti-gravity")) {
                 jumping = true;
                 velocityY += antiGravAccel;
             }
 
-            if (hasProperty(x, y, "damage")
-                    || hasProperty(x + width, y, "damage")
-                    || hasProperty(x, y + height, "damage")
-                    || hasProperty(x + width, y + height, "damage")) {
+            if (level.hasProperty(x, y, "damage")
+                    || level.hasProperty(x + width, y, "damage")
+                    || level.hasProperty(x, y + height, "damage")
+                    || level.hasProperty(x + width, y + height, "damage")) {
                 takeDamage(5);
             }
 
             //X and Y velocity clamping
             if(isFacingRight != movingRight) {  //if player is not facing the same direction as they are moving
-                if(velocityX > 0.5f) velocityX = 0.5f;
-                if(velocityX < -0.5f) velocityX = -0.5f;
+                if(velocityX > 0.4f) velocityX = 0.4f;
+                if(velocityX < -0.4f) velocityX = -0.4f;
             }
             //we want to clamp these values so that one updatePhysics iteration can't move the player all the way through a tile
             if (velocityY < -1f) velocityY = -1f;
             if (velocityY > 1f) velocityY = 1f;
         }
 
-        xCollision = false;
-        checkYcollision(oldX, oldY);
-        if (velocityX < 0) {      //check for collision on the left side
-            if (hasProperty(x, y, "rigid") || hasProperty(x, y + height, "rigid")) {
-                velocityX = 0;
-                x = oldX - (oldX % (collisionLayer.getTileWidth() * mapUnitScale)) + 1;
-                xCollision = true;
-            }
-        } else if (velocityX > 0) {     //check for collision on the right side
-            if (hasProperty(x + width, y, "rigid") || hasProperty(x + width, y + height, "rigid")) {
-                velocityX = 0;
-                x = x - (x + width) % (collisionLayer.getTileWidth() * mapUnitScale) - 1;
-                xCollision = true;
-            }
-        }
-        checkYcollision(oldX, oldY);
+        checkCollision(oldX, oldY);
 
         if(x < 0) x = 0;
 
         //conditional for when the camera should follow the player
-        if(x > Gdx.graphics.getWidth()*(1/4f)) mh.getCamera().position.x  = this.x+Gdx.graphics.getWidth()/4f;
-        //if(y > Gdx.graphics.getHeight()/2) mh.getCamera().position.y  = this.y;
-        mh.getCamera().update();
+        if(x > Gdx.graphics.getWidth()*(1/4f)) level.getCamera().position.x  = this.x+Gdx.graphics.getWidth()/4f;
+        if(y > Gdx.graphics.getHeight()/2) level.getCamera().position.y  = this.y;
+        level.getCamera().update();
 
         if(this.health <= 0)
         {
@@ -229,53 +217,92 @@ public class Player implements Character {
         }
 
     }
-    private boolean hasProperty(float x, float y, String property) {
-        //takes in world coordinates and converts to tile coordinates
-        //for example, if the tile size is 100 and the input coordinates are (150,50),
-        //tile coordinates are (1,0). This is required to access individual tile properties
-        float tileX = x / (collisionLayer.getTileWidth() * mapUnitScale);
-        float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
-        if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;  //if we don't check for null cells, the next line will give a null pointer exception
-        else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey(property));  //get the boolean of whether the tile has the input property
-    }
-    private void checkYcollision(float oldX, float oldY) {
+    private void checkCollision(float oldX, float oldY) {
+
+        /* Start collision checking in X direction */
+        if(velocityX < 0){
+            //the nearest tile X border when the player is traveling left
+            float nearestXborder = oldX - oldX % (level.getCollisionLayer().getTileWidth()*mapUnitScale);
+            /* we want to check for X collision when the player passes over the nearest X border.
+             * In the case of velocityX < 0, this occurs when the new X value is less than the border, and the old X
+             * value is greater than the border. Since the old X value will always be greater than the border, we only
+             * have to check the former condition */
+            if(x < nearestXborder){     //if we have passed the nearest x border
+                if(level.hasProperty(x, oldY, "rigid", false, false)
+                || level.hasProperty(x, (oldY+height), "rigid", false, false)){    //if there is collision
+                    velocityX = 0;
+                    x = nearestXborder;
+                }
+            }
+        }else if (velocityX > 0){
+            //the nearest tile X border when the player is traveling left
+            float nearestXborder = (x+width) - (x+width) % (level.getCollisionLayer().getTileWidth()*mapUnitScale);
+            /* we want to check for X collision when the player passes over the nearest X border.
+             * In the case of velocityX > 0, this occurs when the [old X value plus width] is less than the border, and
+             * the [new X value plus width] is greater than the border. Since the [new X value plus width] will always
+             * be greater  than the border, we only have to check the former condition */
+            if(x + width > nearestXborder){  //if we have passed the nearest x border
+                if(level.hasProperty((x+width), oldY, "rigid", true, false)
+                || level.hasProperty((x+width), (oldY+height), "rigid", true, false)){  //if there is collision
+                    velocityX = 0;
+                    x = nearestXborder - width;
+                }
+            }
+        }
+
+        /* Start checking collision in the Y direction */
         if (velocityY < 0) {
             //case where player is currently falling
+            //the nearest Y border will be the y value on which the player will land if they indeed should land
             float nearestYborder = oldY - oldY % (collisionLayer.getTileHeight() * mapUnitScale);
-            if (hasProperty(x, y-1, "rigid") || hasProperty(x + width, y-1, "rigid")){
-                if (!(hasProperty(x, oldY, "rigid") || hasProperty(x + width, oldY, "rigid"))){
+            //if y is less than the nearest Y border, and the player is falling, this means they have passed the nearest Y border
+            if(y < nearestYborder){
+                //if the new y value has either the property "platform" or "rigid", the player should stop falling
+                //this needs to be checked at each end of the player's collision box,
+                // meaning one check for (x,y), and another check for ((x+width),y) for each property
+                if(level.hasProperty(x, y,"rigid",false,true)
+                || level.hasProperty(x+width,y,"rigid",true,true)
+                || level.hasProperty(x, y,"platform",false,true)
+                || level.hasProperty(x+width,y,"platform",true,true)){
+                    jumping =  false;
                     velocityY = 0;
                     y = nearestYborder;
-                    jumping = false;
                 }
             }
-            if (hasProperty(x, y-1, "platform") || hasProperty(x + width, y-1, "platform")) {
-                if(y < nearestYborder){
+        }else if(velocityY > 0){
+            //case where the player is moving upward in the y-direction
+            //nearest Y border in this case is the y value that the player will stop at if they've hit an unpassable tile
+            float nearestYborder = y+height - (y+height) % (collisionLayer.getTileHeight() * mapUnitScale);
+            /* if old y is less than the nearest y border, and y is greater than the nearest y border, the player has passed
+             * the y border, but since y will always be greater than the nearest y border in the case that velocityY > 0,
+             * we only have to check if old y is less than the nearest y border.
+            /* Since we want to check the top of the player's collision box, the "y" values are actually y + height */
+            if(oldY+height < nearestYborder){
+                //since the hasproperty method with only 3 params assumes that the latter two booleans are false,
+                //and this is ideal for this case, we don't need to use the longer method call for hasProperty
+                if(level.hasProperty(x, y+height, "rigid", false, false)
+                || level.hasProperty(x+width, y+height, "rigid", true, false)){
                     velocityY = 0;
-                    y =nearestYborder;
-                    jumping = false;
+                    y = nearestYborder - height-1;
                 }
             }
-
-
-        } else if (velocityY > 0) {   //velocityY is positive, which means the character is traveling upward
-            if (hasProperty(x, y + height, "rigid") || hasProperty(x + width, y + height, "rigid")) {
-                if (hasProperty(oldX, y + height, "rigid") || hasProperty(oldX + width, y + height, "rigid")) {
-                    velocityY = 0;
-                    y = y - (y + height) % (collisionLayer.getTileHeight() * mapUnitScale) - 1;
-                }
-            }
-        } else {
-            if (!(hasProperty(x, y - 1, "rigid") || hasProperty(x+width, y-1, "rigid"))
-                && !(hasProperty(x, y - 1, "platform") || hasProperty(x+width, y-1, "platform")))
-                jumping = true;
         }
+        /* End collision checking in Y direction */
+
+
+
+        if (!(level.hasProperty(x, y - 1, "rigid") || level.hasProperty(x+width, y-1, "rigid"))
+                && !(level.hasProperty(x, y - 1, "platform") || level.hasProperty(x+width, y-1, "platform")))
+            jumping = true;
+        //since jumping is a generic boolean meant to describe simply whether or not the player
+        // is in the air, set it to true whenever the player is not standing on something
     }
     public void setCollisionLayer(TiledMapTileLayer collisionLayer){
         this.collisionLayer = collisionLayer;
     }
     public void takeDamage(int damage){
         if(health > 0) this.health -= damage;
+        if(health < 0) this.health = 0;
     }
     public void updateArmAngle(double angle)
     {
@@ -287,5 +314,15 @@ public class Player implements Character {
     }
     private void kill(){
         this.dispose();
+    }
+    public void addHealth(int health){
+        this.health += health;
+        if(this.health > maxHealth) this.health = maxHealth;
+    }
+    public void addBullets(int bullets){
+        this.bullets += bullets;
+    }
+    public boolean isHealthMax(){
+        return health >= maxHealth;
     }
 }

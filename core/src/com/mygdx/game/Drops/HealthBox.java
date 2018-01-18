@@ -12,14 +12,14 @@ public class HealthBox extends Drop {
         super(image, x, y, mapUnitScale, collisionLayer);
     }
 
-    public void pickup(Player mainPlayer) {
-
-    }
-
     @Override
-    boolean isPickedUp() {
-        return false;
+    public boolean giveTo(Player mainPlayer) {
+        if(!mainPlayer.isHealthMax()){
+            mainPlayer.addHealth(200);
+            return true;
+        }else{
+            return false;
+        }
+
     }
-
-
 }

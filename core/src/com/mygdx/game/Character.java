@@ -11,9 +11,10 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 public interface Character{
     int health = 0;
     int grenades = 0;
+    int bullets = 0;
 
     //method to update the collision detection, acceleration, velocity, etc of the character
-    void updatePhysics(MapHandler mh);
+    void updatePhysics(Level level);
     //dispose of all textures, texturatlases, or anything in the class that implements disposable
     void dispose();
     /* main motion methods for the character */

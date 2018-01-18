@@ -34,7 +34,7 @@ public class GameMain extends Game {
     //unit scale of the map. Ex) tileSize=180px, mapUnitScale=0.25f, actual tile size = 180px*0.25 = 45px
     private float mapUnitScale = 0.25f;
     //mapHandler object to handle getting the map, creating the renderer, fetching the collision layer, etc
-    private MapHandler mapHandler;
+    private Level currentLevel;
     //angle of the arm on the player
     private float angle = 0;
     //x and y distances between the mouse pointer and the arm of the player
@@ -45,8 +45,6 @@ public class GameMain extends Game {
     private List<Drop> drops;
     //font used to display the health number on the health bar
     private BitmapFont font;
-    //the character sequence to print the character's health over the health bar
-    private CharSequence healthAsText;
     //boolean for keeping track of whether or not the player should be able to throw a grenade based on mouse presses
     private boolean grenadeSpawnable = true;
     //boolean to keep track of whether or not the game is paused
@@ -55,14 +53,14 @@ public class GameMain extends Game {
     private Texture backgroundTexture;
     @Override
     public void create () {
-        //instantiate the main player
-        mainPlayer = new Player(0, 600, 40, 40, 1000, mapUnitScale);
         //create the mapHandler
-        mapHandler = new MapHandler(mapUnitScale);
+        currentLevel = new Level(mapUnitScale, "maps/MyMap.tmx");
+        //instantiate the main player
+        mainPlayer = new Player(0, 600, 40, 40, 1000, mapUnitScale, currentLevel);
         //pass the collision layer to the player so that it can be used for collision detection
-        mainPlayer.setCollisionLayer(mapHandler.getCollisionLayer());
+        mainPlayer.setCollisionLayer(currentLevel.getCollisionLayer());
         //set the batch for this class to the batch used to render the map
-        this.batch =  mapHandler.getRendererBatch();
+        this.batch =  currentLevel.getRendererBatch();
         //instantiate the SpriteBatch for the hud
         hudBatch = new SpriteBatch();
         //instantiate the batch for the background
@@ -74,7 +72,7 @@ public class GameMain extends Game {
         //instantiate the background spriteBatch
         backgroundTexture = new Texture(Gdx.files.internal("maps/test_landscape.png"));
 
-        drops = mapHandler.getDropsList();
+        drops = currentLevel.getDropList();
     }
     @Override
     public void render() {
@@ -92,9 +90,9 @@ public class GameMain extends Game {
         //backgroundBatch.end();
 
         //Set the map renderer to render in the view of the camera
-        mapHandler.getRenderer().setView(mapHandler.getCamera());
+        currentLevel.getRenderer().setView(currentLevel.getCamera());
         batch.enableBlending();                     //enabling blending seems to make camera panning generally much smoother
-        mapHandler.getRenderer().render();          //actually render the map
+        currentLevel.getRenderer().render();          //actually render the map
         batch.begin();                              //begin the main batch drawing process
 
         hudBatch.setColor(1,1,1,1);    //set the color of everything to be normal. Required in case the game just became unpaused
@@ -118,35 +116,39 @@ public class GameMain extends Game {
         mainPlayer.dispose();
         backgroundBatch.dispose();
         backgroundTexture.dispose();
-        mapHandler.dispose();
+        currentLevel.dispose();
         for(Entity entity : entities)
             entity.dispose();
     }
     private void inputHandler() {
-        if ((Gdx.input.isKeyPressed(Input.Keys.SPACE)
-                || Gdx.input.isKeyPressed(Input.Keys.W)
-                || Gdx.input.isKeyPressed(Input.Keys.UP))
-                && !mainPlayer.getJumping())    //if space is pressed and the char is not already jumping
-        {
-            /* main jumping conditional  */
-            mainPlayer.jump();
+        //handle case where up and down are being simultaneously pressed
+        if((Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.SPACE))
+            &&(Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S))){
+            mainPlayer.noInput();
+        }else {
+            if ((Gdx.input.isKeyPressed(Input.Keys.SPACE)
+                    || Gdx.input.isKeyPressed(Input.Keys.W)
+                    || Gdx.input.isKeyPressed(Input.Keys.UP))
+                    && !mainPlayer.getJumping())    //if space is pressed and the char is not already jumping
+            {
+                /* main jumping conditional  */
+                mainPlayer.jump();
+            }if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
+                /* main left movement handler */
+                mainPlayer.moveLeft();
+            } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) {
+                /* main right movement handler */
+                mainPlayer.moveRight();
+            } else
+                mainPlayer.noInput();
         }
         if (mainPlayer.getJumping() && (Gdx.input.isKeyPressed(Input.Keys.DOWN)) || Gdx.input.isKeyPressed(Input.Keys.S)) {
             /* main "force down" conditional  */
             mainPlayer.forceDown();
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
-            /* main left movement handler */
-            mainPlayer.moveLeft();
-        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) {
-            /* main right movement handler */
-            mainPlayer.moveRight();
-        }else
-            mainPlayer.noInput();
-
         //  dx and dy get the difference between the center of the player and the mouse. It kind of makes sense if you don't think about it too much
-        dx = Gdx.input.getX() - (mainPlayer.getX() - (mapHandler.getCamera().position.x - Gdx.graphics.getWidth() / 2) + mainPlayer.getWidth() / 2);
-        dy = (Gdx.graphics.getHeight() - Gdx.input.getY()) - (mainPlayer.getY() + mainPlayer.getHeight() / 2);
+        dx = Gdx.input.getX() - (mainPlayer.getX() - (currentLevel.getCamera().position.x - Gdx.graphics.getWidth() / 2) + mainPlayer.getWidth() / 2);
+        dy = (Gdx.graphics.getHeight() - Gdx.input.getY()) - (mainPlayer.getY() + mainPlayer.getHeight() / 2) + (currentLevel.getCamera().position.y-Gdx.graphics.getHeight()/2);
 
         //change the direction that the main player is facing based on whether the cursor is to the left or to the right of them
         if(dx < 0) mainPlayer.isFacingRight = false;
@@ -162,33 +164,39 @@ public class GameMain extends Game {
         if (Gdx.input.isButtonPressed(Input.Buttons.MIDDLE)) {
             //if the grenade key is not already being held down
             if(grenadeSpawnable)
-                //spawn a new grenade
-                entities.add(new Grenade(20,
-                        angle,
-                        20,
-                        mapUnitScale,
-                        mainPlayer.getX() + mainPlayer.getWidth()/2 - mainPlayer.getWidth()/8,
-                        mainPlayer.getY() + mainPlayer.getHeight()/2 - mainPlayer.getWidth()/8,
-                        mainPlayer.getWidth() / 4,
-                        mainPlayer.getHeight() / 4,
-                        mapHandler.getCollisionLayer(),
-                        batch,
-                        mainPlayer));
+                if(mainPlayer.grenades > 0) {
+                    //spawn a new grenade
+                    entities.add(new Grenade(23,
+                            angle,
+                            20,
+                            mapUnitScale,
+                            mainPlayer.getX() + mainPlayer.getWidth() / 2 - mainPlayer.getWidth() / 8,
+                            mainPlayer.getY() + mainPlayer.getHeight() / 2 - mainPlayer.getWidth() / 8,
+                            mainPlayer.getWidth() / 4,
+                            mainPlayer.getHeight() / 4,
+                            currentLevel.getCollisionLayer(),
+                            batch,
+                            mainPlayer));
+                    mainPlayer.grenades -= 1;
+                }
             /* We don't want the player to be able to spawn any new grenades until the key is released and pressed again
             so, set spawnable to false unless the button is not pressed  */
             grenadeSpawnable = false;
         }else grenadeSpawnable = true;
         if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
-            entities.add(new Bullet(0,
-                    30,
-                    angle,
-                    mainPlayer.getX() + mainPlayer.getWidth()/2 - mainPlayer.getWidth()/16,
-                    mainPlayer.getY() + mainPlayer.getHeight()/2 - mainPlayer.getHeight()/16,
-                    3,
-                    mainPlayer.getWidth() / 8,
-                    mainPlayer.getHeight() / 16,
-                    mapHandler.getCollisionLayer(),
-                    mapUnitScale));
+            if(mainPlayer.bullets > 0) {
+                entities.add(new Bullet(0,
+                        30,
+                        angle,
+                        mainPlayer.getX() + mainPlayer.getWidth() / 2 - mainPlayer.getWidth() / 16,
+                        mainPlayer.getY() + mainPlayer.getHeight() / 2 - mainPlayer.getHeight() / 16,
+                        3,
+                        mainPlayer.getWidth() / 8,
+                        mainPlayer.getHeight() / 16,
+                        currentLevel.getCollisionLayer(),
+                        mapUnitScale));
+                mainPlayer.bullets -= 1;
+            }
         }
     }
     private void drawEverything(){
@@ -210,7 +218,8 @@ public class GameMain extends Game {
             }
         }
         for(Drop drop : drops) drop.updatePhysics();
-        mainPlayer.updatePhysics(mapHandler);       //update the physics of the main player
+        mainPlayer.updatePhysics(currentLevel);       //update the physics of the main player
+        currentLevel.checkForDrops(mainPlayer);
     }
     private void drawHud() {
         //width of the rectangle should be the full width of the screen multiplied by the percentage of the player's health left
@@ -224,13 +233,18 @@ public class GameMain extends Game {
         //image of the healthbar
         Texture health = new Texture(Gdx.files.internal("healthGradient.png"));
         //text to be displayed on the center of the healthbar
-        healthAsText = (mainPlayer.getHealth() / 10 + "%");
+        String healthAsText = (((float)mainPlayer.getHealth() / 10f) + "%");
+        String bulletsAsText = (mainPlayer.bullets + " bullets");
+        String grenadesAsText = (mainPlayer.grenades + " grenades");
+        System.out.println(mainPlayer.getHealth());
         hudBatch.begin();       //start the drawing process on the hudbatch
         if (!paused) {          //if the game is not paused
             hudBatch.setColor(1, 1, 1, alpha);  //set the alpha channel
             hudBatch.draw(health, rectX, 0, rectWidth, rectHeight); //actually draw the health bar
             //draw the text that goes over the health bar
             font.draw(hudBatch, healthAsText, Gdx.graphics.getWidth() / 2, 20, 20, 20, false);
+            font.draw(hudBatch, grenadesAsText, 5, Gdx.graphics.getHeight()-5, 30, 30, false);
+            font.draw(hudBatch, bulletsAsText, 5, Gdx.graphics.getHeight()-30, 30, 30, false);
         } else {
             //if the game is paused, display a half opaque black box over the whole screen
             hudBatch.setColor(1, 1, 1, 0.5f);

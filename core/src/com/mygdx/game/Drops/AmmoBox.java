@@ -11,12 +11,10 @@ public class AmmoBox extends Drop {
         super(image, x, y, mapUnitScale, collisionLayer);
     }
 
-    public void pickup(Player mainPlayer) {
-
-    }
-
     @Override
-    boolean isPickedUp() {
-        return false;
+    public boolean giveTo(Player mainPlayer) {
+        mainPlayer.addBullets(100);
+        mainPlayer.grenades += 1;
+        return true;
     }
 }

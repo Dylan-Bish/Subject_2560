@@ -44,9 +44,12 @@ public abstract class Drop {
                 y = oldY - (oldY % (collisionLayer.getTileHeight()*mapUnitScale));
                 isGrounded = true;
             }
+            if (hasProperty(x + width / 2, y, "anti-gravity")) {
+                velocityY += 1;
+            }
         }
     }
-    abstract boolean isPickedUp();
+    public abstract boolean giveTo(Player mainPlayer);
     private boolean hasProperty(float x, float y, String property) {
         //takes in world coordinates and converts to tile coordinates
         //for example, if the tile size is 100 and the input coordinates are (150,50),
@@ -55,5 +58,17 @@ public abstract class Drop {
         float tileY = y / (collisionLayer.getTileHeight() * mapUnitScale);
         if (collisionLayer.getCell((int) tileX, (int) tileY) == null) return false;  //if we don't check for null cells, the next line will give a null pointer exception
         else return (collisionLayer.getCell((int) tileX, (int) tileY).getTile().getProperties().containsKey(property));  //get the boolean of whether the tile has the input property
+    }
+    public float getX(){
+        return x;
+    }
+    public float getY() {
+        return y;
+    }
+    public float getWidth() {
+        return width;
+    }
+    public float getHeight() {
+        return height;
     }
 }
