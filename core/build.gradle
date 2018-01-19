@@ -1,11 +1,22 @@
 apply plugin: "java"
 
-sourceCompatibility = 1.6
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+sourceCompatibility = 7
+//[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 sourceSets.main.java.srcDirs = [ "src/" ]
 
 
-eclipse.project {
-    name = appName + "-core"
+jar {
+    manifest {
+        attributes 'Main-Manifest': 'com.mygdx.game.desktop.DesktopLauncher'
+    }
+}
+ext.sharedManifest = manifest {
+    attributes("Implementation-Title": "Gradle",
+            "Implementation-Version": version)
+}
+task fooJar(type: Jar) {
+    manifest = project.manifest {
+        from sharedManifest
+    }
 }

@@ -12,6 +12,7 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.mygdx.game.Drops.AmmoBox;
 import com.mygdx.game.Drops.Drop;
 import com.mygdx.game.Drops.HealthBox;
+import com.mygdx.game.Drops.Key;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ public class Level {
 
     private float mapUnitScale;
     private TiledMap map;
+    private TiledMapTileLayer collisionLayer;
     private OrthographicCamera camera;
     private List<Drop> drops;
     private OrthogonalTiledMapRenderer renderer;
@@ -31,9 +33,14 @@ public class Level {
         camera = new OrthographicCamera();
         drops = new ArrayList<>();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        TiledMapTileLayer collisionLayer = (TiledMapTileLayer) map.getLayers().get("mainLayer");
+        collisionLayer.setOffsetX(0);
+        collisionLayer.setOffsetY(0);
 
         /* take all them Drops and spawn em */
         TiledMapTileLayer dropLayer = (TiledMapTileLayer) map.getLayers().get("drops");
+        dropLayer.setOffsetX(0);
+        dropLayer.setOffsetY(0);
         dropLayer.setVisible(false);
         for(int i = 0; i  < dropLayer.getWidth(); i++){
             for(int j = 0; j < dropLayer.getHeight(); j++){
@@ -48,9 +55,12 @@ public class Level {
                             case "ammo":
                                 drops.add(new AmmoBox(tileTextureRegion,x,y,mapUnitScale,getCollisionLayer()));
                                 break;
-
                             case "health":
                                 drops.add(new HealthBox(tileTextureRegion,x,y,mapUnitScale,getCollisionLayer()));
+                                break;
+                            case "key":
+                                String keyColor = (String)tile.getProperties().get("key");
+                                drops.add(new Key(tileTextureRegion,x,y,mapUnitScale,getCollisionLayer(),keyColor));
                                 break;
                         }
                     }
@@ -110,6 +120,7 @@ public class Level {
     }
 
     public void dispose() {
+
         map.dispose();
         renderer.dispose();
     }
@@ -125,6 +136,39 @@ public class Level {
                     i++;
                 }
             }
+        }
+    }
+
+    public void openDoor(Player mainPlayer){
+        float playerMidX = mainPlayer.getX()+(mainPlayer.getWidth()/2);
+        float playerMidY = mainPlayer.getY()+(mainPlayer.getHeight()/2);
+        //condition to check door on the right of the player
+        if(hasProperty(playerMidX+getCollisionLayer().getTileWidth()*mapUnitScale, playerMidY, "door")){
+            int doorTileX = (int)((playerMidX+getCollisionLayer().getTileWidth()*mapUnitScale)/(getCollisionLayer().getTileWidth()*mapUnitScale));
+            int doorTileY = (int)(playerMidY/(getCollisionLayer().getTileHeight()*mapUnitScale));
+            if(mainPlayer.hasKey((String)(getCollisionLayer().getCell(doorTileX,doorTileY).getTile().getProperties().get("door"))))
+                getCollisionLayer().setCell(doorTileX, doorTileY,null);
+        }
+        //condition to check door on the left of the player
+        if(hasProperty(playerMidX-getCollisionLayer().getTileWidth()*mapUnitScale, playerMidY, "door")){
+            int doorTileX = (int)((playerMidX-getCollisionLayer().getTileWidth()*mapUnitScale)/(getCollisionLayer().getTileWidth()*mapUnitScale));
+            int doorTileY = (int)(playerMidY/(getCollisionLayer().getTileHeight()*mapUnitScale));
+            if(mainPlayer.hasKey((String)(getCollisionLayer().getCell(doorTileX,doorTileY).getTile().getProperties().get("door"))))
+                getCollisionLayer().setCell(doorTileX, doorTileY,null);
+        }
+        //conditional to check door below the player
+        if(hasProperty(playerMidX, playerMidY-getCollisionLayer().getTileHeight()*mapUnitScale, "door")){
+            int doorTileX = (int)(playerMidX/(getCollisionLayer().getTileWidth()*mapUnitScale));
+            int doorTileY = (int)((playerMidY-getCollisionLayer().getTileHeight()*mapUnitScale)/(getCollisionLayer().getTileHeight()*mapUnitScale));
+            if(mainPlayer.hasKey((String)(getCollisionLayer().getCell(doorTileX,doorTileY).getTile().getProperties().get("door"))))
+                getCollisionLayer().setCell(doorTileX, doorTileY,null);
+        }
+        //conditional to check door above the player
+        if(hasProperty(playerMidX, playerMidY+getCollisionLayer().getTileHeight()*mapUnitScale, "door")){
+            int doorTileX = (int)(playerMidX/(getCollisionLayer().getTileWidth()*mapUnitScale));
+            int doorTileY = (int)((playerMidY+getCollisionLayer().getTileHeight()*mapUnitScale)/(getCollisionLayer().getTileHeight()*mapUnitScale));
+            if(mainPlayer.hasKey((String)(getCollisionLayer().getCell(doorTileX,doorTileY).getTile().getProperties().get("door"))))
+                getCollisionLayer().setCell(doorTileX, doorTileY,null);
         }
     }
 }

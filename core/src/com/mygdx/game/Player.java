@@ -7,8 +7,11 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.mygdx.game.Drops.Key;
 
 import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Dylan Bish on 12/21/17.
  */
@@ -42,6 +45,7 @@ public class Player implements Character {
     private boolean movingLeft = false;
     public boolean isDead = false;
     public boolean isFacingRight = true;
+    private List<Key> keys;
     private Level level;
 
     Player(int x, int y, int width, int height, int maxHealth, float mapUnitScale, Level level) {
@@ -56,6 +60,7 @@ public class Player implements Character {
         health = maxHealth;
         this.mapUnitScale = mapUnitScale;
         this.level = level;
+        keys = new ArrayList<>();
         arrow = new TextureRegion(new Texture(Gdx.files.internal("guntest.png")));
     }
     private ArrayList<TextureAtlas> getAllAtlasesUsed() {
@@ -324,5 +329,15 @@ public class Player implements Character {
     }
     public boolean isHealthMax(){
         return health >= maxHealth;
+    }
+    public List<Key> getKeys(){
+        return keys;
+    }
+    public boolean hasKey(String color){
+        for(Key key : keys){
+            if(key.getColor().equals(color))
+                return true;
+        }
+        return false;
     }
 }

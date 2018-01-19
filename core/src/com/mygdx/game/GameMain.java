@@ -56,7 +56,8 @@ public class GameMain extends Game {
         //create the mapHandler
         currentLevel = new Level(mapUnitScale, "maps/MyMap.tmx");
         //instantiate the main player
-        mainPlayer = new Player(0, 600, 40, 40, 1000, mapUnitScale, currentLevel);
+        int initialY = (int)(currentLevel.getCollisionLayer().getTileHeight()*currentLevel.getCollisionLayer().getHeight()*mapUnitScale-100);
+        mainPlayer = new Player(0, initialY, 40, 40, 1000, mapUnitScale, currentLevel);
         //pass the collision layer to the player so that it can be used for collision detection
         mainPlayer.setCollisionLayer(currentLevel.getCollisionLayer());
         //set the batch for this class to the batch used to render the map
@@ -145,6 +146,9 @@ public class GameMain extends Game {
         if (mainPlayer.getJumping() && (Gdx.input.isKeyPressed(Input.Keys.DOWN)) || Gdx.input.isKeyPressed(Input.Keys.S)) {
             /* main "force down" conditional  */
             mainPlayer.forceDown();
+        }
+        if(Gdx.input.isKeyJustPressed(Input.Keys.E)){
+            currentLevel.openDoor(mainPlayer);
         }
         //  dx and dy get the difference between the center of the player and the mouse. It kind of makes sense if you don't think about it too much
         dx = Gdx.input.getX() - (mainPlayer.getX() - (currentLevel.getCamera().position.x - Gdx.graphics.getWidth() / 2) + mainPlayer.getWidth() / 2);
@@ -236,7 +240,6 @@ public class GameMain extends Game {
         String healthAsText = (((float)mainPlayer.getHealth() / 10f) + "%");
         String bulletsAsText = (mainPlayer.bullets + " bullets");
         String grenadesAsText = (mainPlayer.grenades + " grenades");
-        System.out.println(mainPlayer.getHealth());
         hudBatch.begin();       //start the drawing process on the hudbatch
         if (!paused) {          //if the game is not paused
             hudBatch.setColor(1, 1, 1, alpha);  //set the alpha channel
