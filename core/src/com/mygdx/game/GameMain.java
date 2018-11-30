@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mygdx.game.Drops.Drop;
+import com.mygdx.game.Drops.Key;
 import com.mygdx.game.Entities.Bullet;
 import com.mygdx.game.Entities.Entity;
 import com.mygdx.game.Entities.Grenade;
@@ -241,6 +242,9 @@ public class GameMain extends Game {
         String bulletsAsText = (mainPlayer.bullets + " bullets");
         String grenadesAsText = (mainPlayer.grenades + " grenades");
         hudBatch.begin();       //start the drawing process on the hudbatch
+        for(Key key : mainPlayer.getKeys()){
+            this.hudBatch.draw(key.getImage(), 50+100*mainPlayer.getKeys().indexOf(key), 50, 2*key.getImage().getRegionWidth()*this.mapUnitScale, 2*key.getImage().getRegionHeight()*this.mapUnitScale);
+        }
         if (!paused) {          //if the game is not paused
             hudBatch.setColor(1, 1, 1, alpha);  //set the alpha channel
             hudBatch.draw(health, rectX, 0, rectWidth, rectHeight); //actually draw the health bar

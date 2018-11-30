@@ -71,4 +71,7 @@ public abstract class Drop {
     public float getHeight() {
         return height;
     }
+    public TextureRegion getImage(){
+        return this.image;
+    }
 }
