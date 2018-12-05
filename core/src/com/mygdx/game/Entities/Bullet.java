@@ -29,7 +29,7 @@ public class Bullet implements Entity {
     private float angle;
 
     //Raw damage done by bullet
-    private int _damage;
+    private int damage;
 
     //the actual bullet image
     private Texture image;
@@ -44,7 +44,7 @@ public class Bullet implements Entity {
     private boolean isDead = false;
 
     public Bullet(int damage, int velocity, float idealAngle, float x, float y, float variationAngle, float width, float height, TiledMapTileLayer collisionLayer, float mapUnitScale) {
-        _damage = damage;
+        this.damage = damage;
 
         //calculate the actual angle of this bullet based on the ideal, variation, and some randomness
         Random rand = new Random();
@@ -120,5 +120,8 @@ public class Bullet implements Entity {
     }
     public void dispose(){
         image.dispose();
+    }
+    public int getDamage(){
+        return this.damage;
     }
 }

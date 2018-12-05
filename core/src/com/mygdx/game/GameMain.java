@@ -6,13 +6,17 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mygdx.game.Drops.Drop;
 import com.mygdx.game.Drops.Key;
 import com.mygdx.game.Entities.Bullet;
 import com.mygdx.game.Entities.Entity;
 import com.mygdx.game.Entities.Grenade;
-import java.lang.CharSequence;
+import com.mygdx.game.Model.Hud;
+import com.mygdx.game.Model.Level;
+import com.mygdx.game.Model.Player;
+
 import java.util.ArrayList;
 import java.util.List;
 import static java.lang.Math.atan;
@@ -26,8 +30,7 @@ public class GameMain extends Game {
     private Batch batch;
     //Spritebatch for rendering the background image
     private SpriteBatch backgroundBatch;
-    //Spritebatch for rendering the hud elements
-    private SpriteBatch hudBatch;
+
     //the main player
     private Player mainPlayer;
     //timePassed variable. Used to keep track of the differential time for animations
@@ -44,14 +47,15 @@ public class GameMain extends Game {
     private List<Entity> entities;
     //list of drops to be rendered
     private List<Drop> drops;
-    //font used to display the health number on the health bar
-    private BitmapFont font;
     //boolean for keeping track of whether or not the player should be able to throw a grenade based on mouse presses
     private boolean grenadeSpawnable = true;
     //boolean to keep track of whether or not the game is paused
     private boolean paused = false;
     //Texture to display the background image
     private Texture backgroundTexture;
+    //The hud object to be drawn over the actual game
+    private Hud hud;
+
     @Override
     public void create () {
         //create the mapHandler
@@ -63,17 +67,13 @@ public class GameMain extends Game {
         mainPlayer.setCollisionLayer(currentLevel.getCollisionLayer());
         //set the batch for this class to the batch used to render the map
         this.batch =  currentLevel.getRendererBatch();
-        //instantiate the SpriteBatch for the hud
-        hudBatch = new SpriteBatch();
         //instantiate the batch for the background
         backgroundBatch = new SpriteBatch();
         //keep lists of grenades and bullets to be rendered
         entities = new ArrayList<>();
-        //instantiate the font for the health bar
-        font = new BitmapFont();
         //instantiate the background spriteBatch
         backgroundTexture = new Texture(Gdx.files.internal("maps/test_landscape.png"));
-
+        this.hud = new Hud();
         drops = currentLevel.getDropList();
     }
     @Override
@@ -97,7 +97,6 @@ public class GameMain extends Game {
         currentLevel.getRenderer().render();          //actually render the map
         batch.begin();                              //begin the main batch drawing process
 
-        hudBatch.setColor(1,1,1,1);    //set the color of everything to be normal. Required in case the game just became unpaused
         if(!mainPlayer.isDead && !paused)           //if the game is not paused and the player is not dead, do the main input handling
             inputHandler();                         //main input handling
 
@@ -106,21 +105,9 @@ public class GameMain extends Game {
         }
         drawEverything();                           //no matter what, draw everything to the screen
         batch.end();                                //stop drawing on the main batch
-
-        drawHud();
+        hud.draw(mainPlayer, mapUnitScale);
         if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) paused = !paused;  //pause game input handler
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) Gdx.app.exit();   //end game input handler
-    }
-    @Override
-    public void dispose () {
-        //method to make garbage collection more efficient
-        //any object that implements disposable should be seen here
-        mainPlayer.dispose();
-        backgroundBatch.dispose();
-        backgroundTexture.dispose();
-        currentLevel.dispose();
-        for(Entity entity : entities)
-            entity.dispose();
     }
     private void inputHandler() {
         //handle case where up and down are being simultaneously pressed
@@ -214,6 +201,7 @@ public class GameMain extends Game {
         for(Drop drop : drops) drop.draw(batch);
     }
     private void updateAllPhysics(){
+        //****do not change to forEach loop, it breaks shit****//
         for (int i = 0; i < entities.size(); i++) { //for each grenade
             entities.get(i).updatePhysics();        //update the physics of the grenade
             if (entities.get(i).isDead()) {         //if the entity should be killed (not rendered or have it's physics updated anymore)
@@ -226,37 +214,16 @@ public class GameMain extends Game {
         mainPlayer.updatePhysics(currentLevel);       //update the physics of the main player
         currentLevel.checkForDrops(mainPlayer);
     }
-    private void drawHud() {
-        //width of the rectangle should be the full width of the screen multiplied by the percentage of the player's health left
-        int rectWidth = (int) (Gdx.graphics.getWidth() * (mainPlayer.getHealth() / 1000f));
-        //height of the rectangle should be 1/30th of the total height of the window
-        int rectHeight = Gdx.graphics.getHeight() / 30;
-        //x offset of the rectangle in order to center it on screen
-        int rectX = Gdx.graphics.getWidth() / 2 - rectWidth / 2;
-        //opacity of the healthbar
-        float alpha = 0.6f;
-        //image of the healthbar
-        Texture health = new Texture(Gdx.files.internal("healthGradient.png"));
-        //text to be displayed on the center of the healthbar
-        String healthAsText = (((float)mainPlayer.getHealth() / 10f) + "%");
-        String bulletsAsText = (mainPlayer.bullets + " bullets");
-        String grenadesAsText = (mainPlayer.grenades + " grenades");
-        hudBatch.begin();       //start the drawing process on the hudbatch
-        for(Key key : mainPlayer.getKeys()){
-            this.hudBatch.draw(key.getImage(), 50+100*mainPlayer.getKeys().indexOf(key), 50, 2*key.getImage().getRegionWidth()*this.mapUnitScale, 2*key.getImage().getRegionHeight()*this.mapUnitScale);
-        }
-        if (!paused) {          //if the game is not paused
-            hudBatch.setColor(1, 1, 1, alpha);  //set the alpha channel
-            hudBatch.draw(health, rectX, 0, rectWidth, rectHeight); //actually draw the health bar
-            //draw the text that goes over the health bar
-            font.draw(hudBatch, healthAsText, Gdx.graphics.getWidth() / 2, 20, 20, 20, false);
-            font.draw(hudBatch, grenadesAsText, 5, Gdx.graphics.getHeight()-5, 30, 30, false);
-            font.draw(hudBatch, bulletsAsText, 5, Gdx.graphics.getHeight()-30, 30, 30, false);
-        } else {
-            //if the game is paused, display a half opaque black box over the whole screen
-            hudBatch.setColor(1, 1, 1, 0.5f);
-            hudBatch.draw(new Texture(Gdx.files.internal("blackbox.png")), 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        }
-        hudBatch.end();     //stop drawing on the hudbatch
+    @Override
+    public void dispose () {
+        //method to make garbage collection more efficient
+        //any object that implements disposable should be seen here
+        batch.dispose();
+        mainPlayer.dispose();
+        backgroundBatch.dispose();
+        backgroundTexture.dispose();
+        currentLevel.dispose();
+        for(Entity entity : entities)
+            entity.dispose();
     }
 }

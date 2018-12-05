@@ -1,4 +1,4 @@
-package com.mygdx.game;
+package com.mygdx.game.Model;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -29,15 +29,16 @@ public class Player implements Character {
     private int width;
     private int height;
     private float moveSpeed = 7.5f;
-    private int jumpSpeed = 20;
+    private float jumpSpeed = 20;
+    private float waterSpeed = 0.35f;
     private float mapUnitScale;
     private float velocityX = 0;
     private float velocityY = 0;
     private float accelerationX = 0.13f;
-    private float gravity = -.05f;
+    private float gravity = -.032f;
     private float damping_factor = 0.15f;
     private float antiGravAccel = 0.1f;
-    private float forceDownAccel = -0.39f;
+    private float forceDownAccel = -0.07f;
     private boolean jumping = true;
     private TextureRegion arrow;
     private float armAngle;
@@ -48,7 +49,7 @@ public class Player implements Character {
     private List<Key> keys;
     private Level level;
 
-    Player(int x, int y, int width, int height, int maxHealth, float mapUnitScale, Level level) {
+    public Player(int x, int y, int width, int height, int maxHealth, float mapUnitScale, Level level) {
         testAtlas = new TextureAtlas(Gdx.files.internal("rightroll.atlas"));	//atlas for main "roll" animation
         rightRollAnimation = new Animation<TextureRegion>(1/60f, testAtlas.getRegions()); //Actual animation object (60fps)
         stillImg = new Texture(Gdx.files.internal("still.png"));	//texture for the "still" image (for when the character is moving neither right nor left)
@@ -72,14 +73,6 @@ public class Player implements Character {
         of each of the textureAtlases used in the file
          */
         return atlases;
-    }
-    public void setGrenades(int grenades)
-    {
-        this.grenades = grenades;
-    }
-    public int getGrenades()
-    {
-        return this.grenades;
     }
     public int getHealth()
     {
@@ -121,7 +114,7 @@ public class Player implements Character {
     }
     public void jump() {
         jumping = true;
-        velocityY = 1;
+        velocityY = 0.75f;
     }
     public void forceDown() {
         if (velocityY > -1f)
@@ -134,18 +127,23 @@ public class Player implements Character {
         float oldX = x;
         float oldY = y;
 
-        if((level.hasProperty(x,y,"water") && level.hasProperty(x+width,y,"water"))
-            || (level.hasProperty(x,y-1,"water") && level.hasProperty(x+width,y-1,"water")))
+        if((level.hasProperty(x,y,"water") && level.hasProperty(x+width-1,y,"water"))
+            || (level.hasProperty(x,y-1,"water") && level.hasProperty(x+width-1,y-1,"water")))
         {
-            if(velocityY > 0.2f) velocityY = .2f;
-            if(velocityY < -0.2f) velocityY = -0.2f;
-            if(velocityX > 0.2f) velocityX = 0.2f;
-            if(velocityX < -0.2f) velocityX = -0.2f;
-            y += (jumpSpeed*velocityY);
-            velocityY += gravity/10;
+            if(velocityY > waterSpeed) velocityY = waterSpeed/2;
+            if(velocityY < -waterSpeed) velocityY = -waterSpeed/2;
+            if(velocityX > waterSpeed) velocityX = waterSpeed;
+            if(velocityX < -waterSpeed) velocityX = -waterSpeed;
+
+            if(jumping){y += (jumpSpeed*velocityY);}
+            velocityY += gravity/4;
             x += moveSpeed * velocityX;
             velocityX /= (1 + damping_factor*2);
-        }else {
+        }else if(!(level.hasProperty(x,y,"water") && level.hasProperty(x+width,y,"water"))
+              &&(level.hasProperty(oldX, oldY, "water") && level.hasProperty(oldX, oldY, "water"))) {
+            jump();
+            System.out.println("debuG");
+        }else{
             //if(!xCollision) {
                 x += moveSpeed * velocityX;
                 velocityX /= (1 + damping_factor);
@@ -210,17 +208,6 @@ public class Player implements Character {
             batch.draw(arrow, x,y,width/2,height/2, width, height, 2, 2, armAngle);
         else
             batch.draw(arrow, x,y,width/2,height/2, width, height, -2, 2, armAngle+180);
-    }
-    public void dispose() {
-        //disposes of all the atlases used in this file
-        ArrayList<TextureAtlas> atlasList = getAllAtlasesUsed();
-        for(TextureAtlas atlas : atlasList) {
-            atlas.dispose();
-            //System.out.println("Disposed of " + atlas.toString());
-            //^^once we add more textureAtlases, we should use this line of code to make sure that all
-            //of them are getting disposed
-        }
-
     }
     private void checkCollision(float oldX, float oldY) {
 
@@ -297,7 +284,7 @@ public class Player implements Character {
 
 
         if (!(level.hasProperty(x, y - 1, "rigid") || level.hasProperty(x+width, y-1, "rigid"))
-                && !(level.hasProperty(x, y - 1, "platform") || level.hasProperty(x+width, y-1, "platform")))
+         && !(level.hasProperty(x, y - 1, "platform") || level.hasProperty(x+width, y-1, "platform")))
             jumping = true;
         //since jumping is a generic boolean meant to describe simply whether or not the player
         // is in the air, set it to true whenever the player is not standing on something
@@ -339,5 +326,17 @@ public class Player implements Character {
                 return true;
         }
         return false;
+    }
+    public void dispose() {
+        //disposes of all the atlases used in this file
+        ArrayList<TextureAtlas> atlasList = getAllAtlasesUsed();
+        for(TextureAtlas atlas : atlasList) {
+            atlas.dispose();
+            //System.out.println("Disposed of " + atlas.toString());
+            //^^once we add more textureAtlases, we should use this line of code to make sure that all
+            //of them are getting disposed
+        }
+        stillImg.dispose();
+        testAtlas.dispose();
     }
 }

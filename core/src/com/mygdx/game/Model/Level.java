@@ -1,6 +1,7 @@
-package com.mygdx.game;
+package com.mygdx.game.Model;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -17,19 +18,18 @@ import com.mygdx.game.Drops.Key;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Level {
+public class Level implements Screen {
 
     private float mapUnitScale;
     private TiledMap map;
-    private TiledMapTileLayer collisionLayer;
     private OrthographicCamera camera;
     private List<Drop> drops;
-    private OrthogonalTiledMapRenderer renderer;
+    private OrthogonalTiledMapRenderer otmRenderer;
 
-    Level(float mapUnitScale, String mapFilePath){
+    public Level(float mapUnitScale, String mapFilePath){
         this.mapUnitScale = mapUnitScale;
         map = new TmxMapLoader().load(mapFilePath);
-        renderer = new OrthogonalTiledMapRenderer(map, mapUnitScale);
+        otmRenderer = new OrthogonalTiledMapRenderer(map, mapUnitScale);
         camera = new OrthographicCamera();
         drops = new ArrayList<>();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -68,20 +68,36 @@ public class Level {
             }
         }
     }
+    @Override
+    public void show() {
 
-    private void resize(int width, int height) {
+    }
+    @Override
+    public void render(float delta) {
+
+    }
+    public void resize(int width, int height) {
         camera.viewportWidth = width;
         camera.viewportHeight = height;
         camera.translate(width/2,height/2);
         camera.update();
     }
+    @Override
+    public void pause() {
 
+    }
+    @Override
+    public void resume() {
+    }
+    @Override
+    public void hide() {
+
+    }
     public boolean hasProperty(float x, float y, String property, boolean roundUpX, boolean roundUpY){
         if(roundUpX) x -= 0.125f;
         if(roundUpY) y -= 0.125f;
         return hasProperty(x,y,property);
     }
-
     public boolean hasProperty(float x, float y, String property){
         int tileX = (int)(x / (getCollisionLayer().getTileWidth()*mapUnitScale));
         int tileY = (int)(y / (getCollisionLayer().getTileHeight()*mapUnitScale));
@@ -90,41 +106,32 @@ public class Level {
         else
             return getCollisionLayer().getCell(tileX, tileY).getTile().getProperties().containsKey(property);
     }
-
     public TiledMapTileLayer getCollisionLayer(){
         return (TiledMapTileLayer) map.getLayers().get("mainLayer");
     }
-
     public TiledMapTileLayer getDropLayer() {
         return (TiledMapTileLayer) map.getLayers().get("drops");
     }
-
     public List<Drop> getDropList(){
         return drops;
     }
-
     public OrthographicCamera getCamera() {
         return camera;
     }
-
     public float getMapUnitScale(){
         return mapUnitScale;
     }
-
     public OrthogonalTiledMapRenderer getRenderer() {
-        return renderer;
+        return otmRenderer;
     }
-
     public Batch getRendererBatch() {
-        return renderer.getBatch();
+        return otmRenderer.getBatch();
     }
-
     public void dispose() {
-
+        //getRendererBatch().dispose();
+        //renderer.dispose();
         map.dispose();
-        renderer.dispose();
     }
-
     public void checkForDrops(Player mainPlayer){
         for(int i = 0; i < drops.size(); i++){
             if(((mainPlayer.getX() + mainPlayer.getWidth()) > drops.get(i).getX())
@@ -138,7 +145,6 @@ public class Level {
             }
         }
     }
-
     public void openDoor(Player mainPlayer){
         float playerMidX = mainPlayer.getX()+(mainPlayer.getWidth()/2);
         float playerMidY = mainPlayer.getY()+(mainPlayer.getHeight()/2);

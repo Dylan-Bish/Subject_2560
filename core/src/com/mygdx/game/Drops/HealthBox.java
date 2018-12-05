@@ -1,10 +1,8 @@
 package com.mygdx.game.Drops;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.mygdx.game.Player;
+import com.mygdx.game.Model.Player;
 
 public class HealthBox extends Drop {
 

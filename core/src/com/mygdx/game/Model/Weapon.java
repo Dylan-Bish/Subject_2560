@@ -1,4 +1,4 @@
-package com.mygdx.game;
+package com.mygdx.game.Model;
 
 import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.Entities.Bullet;

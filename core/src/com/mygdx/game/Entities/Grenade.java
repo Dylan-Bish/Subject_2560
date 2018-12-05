@@ -3,8 +3,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.mygdx.game.Entities.Entity;
-import com.mygdx.game.Player;
+import com.mygdx.game.Model.Player;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
