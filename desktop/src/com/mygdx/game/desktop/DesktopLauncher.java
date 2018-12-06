@@ -9,9 +9,9 @@ public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		//if we set fullscreen and also set v-sync on, the game seems to consistently run with a very smooth framerate and no jitter
-		config.width = 1920;
-		config.height = 1080;
-		config.fullscreen = true;
+		config.width = 1280;
+		config.height = 720;
+		config.fullscreen = false;
         config.vSyncEnabled = true;
 		config.resizable = true;
 		config.title = "Subject 2560";

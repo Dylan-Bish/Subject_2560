@@ -6,7 +6,9 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.Drops.Drop;
 import com.mygdx.game.Entities.Bullet;
 import com.mygdx.game.Entities.Entity;
@@ -86,11 +88,24 @@ public class GameMain extends Game {
 
         //Set the map renderer to render in the view of the camera
         currentLevel.getRenderer().setView(currentLevel.getCamera());
-        //batch.enableBlending();                     //enabling blending seems to make camera panning generally much smoother
-        //ShaderProgram shader = new ShaderProgram()
-        currentLevel.getRenderer().render();          //actually render the map
-        batch.begin();                              //begin the main batch drawing process
 
+        //batch.enableBlending();                     //enabling blending seems to make camera panning generally much smoother
+        ShaderProgram shader = new ShaderProgram(
+                Gdx.files.internal("Shaders/VertexShader.glsl"),
+                Gdx.files.internal("Shaders/FragmentShader.glsl"));
+        ShaderProgram.pedantic = false;
+
+        shader.begin();
+        shader.setUniformMatrix("u_projTrans", currentLevel.getCamera().combined);
+        shader.setUniformf("u_lightPos", new Vector2(mainPlayer.getX()+mainPlayer.getWidth()/2,
+                                                                mainPlayer.getY() + mainPlayer.getHeight()/2));
+        currentLevel.getRenderer().getBatch().setShader(shader);
+        currentLevel.getRenderer().render();          //actually render the map
+        currentLevel.getRenderer().getBatch().setShader(null);
+        shader.end();
+
+        batch.begin();                              //begin the main batch drawing process
+        batch.setShader(shader);
         if(!mainPlayer.isDead && !paused)           //if the game is not paused and the player is not dead, do the main input handling
             inputHandler();                         //main input handling
 
