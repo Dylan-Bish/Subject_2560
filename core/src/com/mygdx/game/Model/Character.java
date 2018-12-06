@@ -2,11 +2,9 @@ package com.mygdx.game.Model;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
 
-
 /**
  * Created by Dylan Bish on 12/21/17.
  */
-
 
 public interface Character{
     int health = 0;

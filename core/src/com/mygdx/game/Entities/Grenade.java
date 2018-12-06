@@ -150,7 +150,7 @@ public class Grenade implements Entity {
         else
             explode();
     }
-    public void dispose(){
+    public void kill(){
         image.dispose();
         explosionTexture.dispose();
     }
@@ -168,7 +168,7 @@ public class Grenade implements Entity {
             batch.draw(explosionTexture, x-radius, y-radius, 2*radius, 2*radius);
         }else {
             exploded = true;
-            this.dispose();
+            this.kill();
         }
     }
     public boolean isDead()

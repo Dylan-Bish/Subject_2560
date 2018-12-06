@@ -37,7 +37,7 @@ public class Player implements Character {
     private float accelerationX = 0.13f;
     private float gravity = -.032f;
     private float damping_factor = 0.15f;
-    private float antiGravAccel = 0.1f;
+    private float antiGravAccel = 0.05f;
     private float forceDownAccel = -0.07f;
     private boolean jumping = true;
     private TextureRegion arrow;
@@ -46,6 +46,7 @@ public class Player implements Character {
     private boolean movingLeft = false;
     public boolean isDead = false;
     public boolean isFacingRight = true;
+    private boolean forceDown = false;
     private List<Key> keys;
     private Level level;
 
@@ -95,8 +96,8 @@ public class Player implements Character {
         return this.y;
     }
     public boolean getJumping() {
-        if((level.hasProperty(x,y,"water") && level.hasProperty(x+width,y,"water"))
-            || (level.hasProperty(x,y-1,"water") && level.hasProperty(x+width,y-1,"water"))){
+        if((level.hasProperty(x,y,"water") && level.hasProperty(x+width-1,y,"water"))
+            || (level.hasProperty(x,y-1,"water") && level.hasProperty(x+width-1,y-1,"water"))){
             return false;
         }else {
             return jumping;
@@ -117,6 +118,7 @@ public class Player implements Character {
         velocityY = 0.75f;
     }
     public void forceDown() {
+        forceDown = true;
         if (velocityY > -1f)
             velocityY += forceDownAccel;
     }
@@ -139,10 +141,7 @@ public class Player implements Character {
             velocityY += gravity/4;
             x += moveSpeed * velocityX;
             velocityX /= (1 + damping_factor*2);
-        }else if(!(level.hasProperty(x,y,"water") && level.hasProperty(x+width,y,"water"))
-              &&(level.hasProperty(oldX, oldY, "water") && level.hasProperty(oldX, oldY, "water"))) {
-            jump();
-            System.out.println("debuG");
+
         }else{
             //if(!xCollision) {
                 x += moveSpeed * velocityX;
@@ -158,9 +157,23 @@ public class Player implements Character {
                 velocityY = 0;
             }
 
-            if (level.hasProperty(x + width / 2, y+1, "anti-gravity")) {
-                jumping = true;
-                velocityY += antiGravAccel;
+            if ((level.hasProperty(x, y+1, "anti-gravity"))
+              ||(level.hasProperty(x + width, y+1, "anti-gravity"))) {
+                //have the effectiveness of the anti-gravity force proportional to the area
+                // of the region of intersection between the anti-grav tile and the player
+                float effectiveness;
+                float tileWidth = level.getCollisionLayer().getTileWidth()*mapUnitScale;
+                if(!(level.hasProperty(x, y+1, "anti-gravity"))){
+                    //player must be to the left of the anti-grav tile
+                    effectiveness = ((x+width) % (tileWidth))/width;
+                }else if(!(level.hasProperty(x+width, y+1, "anti-gravity"))){
+                    //player must be to the right of the anti-grav tile
+                    effectiveness = (width - ((x+width) % (tileWidth)))/width;
+                }else{
+                    //player must have an anti-grav tile on each side of them,  so make the effectiveness maximized
+                    effectiveness=1;
+                }
+                velocityY += (-gravity)+antiGravAccel*effectiveness;
             }
 
             if (level.hasProperty(x, y, "damage")
@@ -195,22 +208,7 @@ public class Player implements Character {
             kill();
         }
     }
-    public void draw(Batch batch, float timePassed){
-        if(movingRight)
-            batch.draw(rightRollAnimation.getKeyFrame(timePassed, true), x, y, width, height);
-        else if(movingLeft)
-            batch.draw(rightRollAnimation.getKeyFrame(timePassed,true), x+width, y, -width, height);
-        else
-            batch.draw(stillImg, x, y, width, height);
-
-        //draw the arm over top of the running or still  animation
-        if(isFacingRight)
-            batch.draw(arrow, x,y,width/2,height/2, width, height, 2, 2, armAngle);
-        else
-            batch.draw(arrow, x,y,width/2,height/2, width, height, -2, 2, armAngle+180);
-    }
     private void checkCollision(float oldX, float oldY) {
-
         /* Start collision checking in X direction */
         if(velocityX < 0){
             //the nearest tile X border when the player is traveling left
@@ -284,10 +282,12 @@ public class Player implements Character {
 
 
         if (!(level.hasProperty(x, y - 1, "rigid") || level.hasProperty(x+width, y-1, "rigid"))
-         && !(level.hasProperty(x, y - 1, "platform") || level.hasProperty(x+width, y-1, "platform")))
+         && !(level.hasProperty(x, y - 1, "platform") || level.hasProperty(x+width, y-1, "platform"))
+         || (level.hasProperty(x, y, "anti-gravity") || level.hasProperty(x+width, y, "anti-gravity")))
             jumping = true;
         //since jumping is a generic boolean meant to describe simply whether or not the player
         // is in the air, set it to true whenever the player is not standing on something
+        forceDown = false;
     }
     public void setCollisionLayer(TiledMapTileLayer collisionLayer){
         this.collisionLayer = collisionLayer;
@@ -326,6 +326,20 @@ public class Player implements Character {
                 return true;
         }
         return false;
+    }
+    public void draw(Batch batch, float timePassed){
+        if(movingRight)
+            batch.draw(rightRollAnimation.getKeyFrame(timePassed, true), x, y, width, height);
+        else if(movingLeft)
+            batch.draw(rightRollAnimation.getKeyFrame(timePassed,true), x+width, y, -width, height);
+        else
+            batch.draw(stillImg, x, y, width, height);
+
+        //draw the arm over top of the running or still  animation
+        if(isFacingRight)
+            batch.draw(arrow, x,y,width/2,height/2, width, height, 2, 2, armAngle);
+        else
+            batch.draw(arrow, x,y,width/2,height/2, width, height, -2, 2, armAngle+180);
     }
     public void dispose() {
         //disposes of all the atlases used in this file

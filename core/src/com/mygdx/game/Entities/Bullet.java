@@ -118,7 +118,7 @@ public class Bullet implements Entity {
     public boolean isDead(){
         return isDead;
     }
-    public void dispose(){
+    public void kill(){
         image.dispose();
     }
     public int getDamage(){

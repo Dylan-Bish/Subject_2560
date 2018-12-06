@@ -5,11 +5,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.mygdx.game.Drops.Drop;
-import com.mygdx.game.Drops.Key;
 import com.mygdx.game.Entities.Bullet;
 import com.mygdx.game.Entities.Entity;
 import com.mygdx.game.Entities.Grenade;
@@ -80,20 +78,16 @@ public class GameMain extends Game {
     public void render() {
         /*------ main rendering loop ------*/
         //set the default background color and do some other openGL nonsense
-        Gdx.gl.glClearColor(0,0.15f,0.05f,1);
+        Gdx.gl.glClearColor(0.1f,0.1f,0.1f,1);
         Gdx.gl.glClear(GL30.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
 
         //update the global timepassed variable to update the framing for animations
         timePassed += Gdx.graphics.getDeltaTime();
 
-        //process of drawing the background texture on the background SpriteBatch
-        //backgroundBatch.begin();
-        //backgroundBatch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        //backgroundBatch.end();
-
         //Set the map renderer to render in the view of the camera
         currentLevel.getRenderer().setView(currentLevel.getCamera());
-        batch.enableBlending();                     //enabling blending seems to make camera panning generally much smoother
+        //batch.enableBlending();                     //enabling blending seems to make camera panning generally much smoother
+        //ShaderProgram shader = new ShaderProgram()
         currentLevel.getRenderer().render();          //actually render the map
         batch.begin();                              //begin the main batch drawing process
 
@@ -182,7 +176,7 @@ public class GameMain extends Game {
                         angle,
                         mainPlayer.getX() + mainPlayer.getWidth() / 2 - mainPlayer.getWidth() / 16,
                         mainPlayer.getY() + mainPlayer.getHeight() / 2 - mainPlayer.getHeight() / 16,
-                        3,
+                        2,
                         mainPlayer.getWidth() / 8,
                         mainPlayer.getHeight() / 16,
                         currentLevel.getCollisionLayer(),
@@ -205,7 +199,7 @@ public class GameMain extends Game {
         for (int i = 0; i < entities.size(); i++) { //for each grenade
             entities.get(i).updatePhysics();        //update the physics of the grenade
             if (entities.get(i).isDead()) {         //if the entity should be killed (not rendered or have it's physics updated anymore)
-                entities.get(i).dispose();          //dispose of it
+                entities.get(i).kill();          //dispose of it
                 entities.remove(i);                 //and remove it from the list
                 i++;                                //and increment the loop counter so that there's no nullpointer nonsense happening
             }
@@ -224,6 +218,6 @@ public class GameMain extends Game {
         backgroundTexture.dispose();
         currentLevel.dispose();
         for(Entity entity : entities)
-            entity.dispose();
+            entity.kill();
     }
 }
