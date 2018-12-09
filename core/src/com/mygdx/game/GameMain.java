@@ -6,8 +6,10 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g3d.Shader;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.Drops.Drop;
 import com.mygdx.game.Entities.Bullet;
@@ -16,6 +18,7 @@ import com.mygdx.game.Entities.Grenade;
 import com.mygdx.game.Model.Hud;
 import com.mygdx.game.Model.Level;
 import com.mygdx.game.Model.Player;
+import com.mygdx.game.Model.ShaderLighting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +30,7 @@ import static java.lang.Math.atan;
 
 public class GameMain extends Game {
     //main Batch object for rendering the map, the player, grenades, bullets, etc
-    private Batch batch;
+    private SpriteBatch batch;
     //Spritebatch for rendering the background image
     private SpriteBatch backgroundBatch;
 
@@ -55,9 +58,17 @@ public class GameMain extends Game {
     private Texture backgroundTexture;
     //The hud object to be drawn over the actual game
     private Hud hud;
+    //custom shader used for level lighting effects
+    private ShaderProgram shader;
+
+    private FrameBuffer frameBuffer;
+    private TextureRegion bufferTexture;
+    private ShaderLighting shaderLighting;
 
     @Override
     public void create () {
+        //set the batch for this class to the batch used to render the map
+        this.batch =  new SpriteBatch();
         //create the mapHandler
         currentLevel = new Level(mapUnitScale, "maps/MyMap.tmx");
         //instantiate the main player
@@ -65,8 +76,7 @@ public class GameMain extends Game {
         mainPlayer = new Player(0, initialY, 40, 40, 1000, mapUnitScale, currentLevel);
         //pass the collision layer to the player so that it can be used for collision detection
         mainPlayer.setCollisionLayer(currentLevel.getCollisionLayer());
-        //set the batch for this class to the batch used to render the map
-        this.batch =  currentLevel.getRendererBatch();
+
         //instantiate the batch for the background
         backgroundBatch = new SpriteBatch();
         //keep lists of grenades and bullets to be rendered
@@ -75,26 +85,38 @@ public class GameMain extends Game {
         backgroundTexture = new Texture(Gdx.files.internal("maps/test_landscape.png"));
         this.hud = new Hud();
         drops = currentLevel.getDropList();
+
+        shader = new ShaderProgram(
+                Gdx.files.internal("Shaders/VertexShader.glsl"),
+                Gdx.files.internal("Shaders/FragmentShader.glsl"));
+        ShaderProgram.pedantic = false;
+
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+        bufferTexture = new TextureRegion(frameBuffer.getColorBufferTexture());
+
+        shaderLighting = new ShaderLighting(batch, mainPlayer, currentLevel);
     }
+
     @Override
     public void render() {
         /*------ main rendering loop ------*/
         //set the default background color and do some other openGL nonsense
-        Gdx.gl.glClearColor(0.1f,0.1f,0.1f,1);
+        Gdx.gl.glClearColor(0f,0f,0f,1);
         Gdx.gl.glClear(GL30.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
 
         //update the global timepassed variable to update the framing for animations
         timePassed += Gdx.graphics.getDeltaTime();
 
+
+        batch.enableBlending();                     //enabling blending seems to make camera panning generally much smoother
+
+        currentLevel.updateCamera(mainPlayer);
+
         //Set the map renderer to render in the view of the camera
         currentLevel.getRenderer().setView(currentLevel.getCamera());
+        currentLevel.getRenderer().render();          //actually render the map
 
-        //batch.enableBlending();                     //enabling blending seems to make camera panning generally much smoother
-        ShaderProgram shader = new ShaderProgram(
-                Gdx.files.internal("Shaders/VertexShader.glsl"),
-                Gdx.files.internal("Shaders/FragmentShader.glsl"));
-        ShaderProgram.pedantic = false;
-
+        /**
         shader.begin();
         shader.setUniformMatrix("u_projTrans", currentLevel.getCamera().combined);
         shader.setUniformf("u_lightPos", new Vector2(mainPlayer.getX()+mainPlayer.getWidth()/2,
@@ -103,9 +125,26 @@ public class GameMain extends Game {
         currentLevel.getRenderer().render();          //actually render the map
         currentLevel.getRenderer().getBatch().setShader(null);
         shader.end();
+         */
+
+        /**
+        renderFBO();
+        batch.setProjectionMatrix(currentLevel.getCamera().combined);
+
+        batch.begin();
+        batch.draw(bufferTexture.getTexture(), 50,50, 320, 240);
+        batch.end();
+
+        currentLevel.updateCamera(mainPlayer);
+        batch.setProjectionMatrix(currentLevel.getCamera().combined);
+        */
+
+        shaderLighting.renderOccluders();
+        shaderLighting.renderShadowMap();
+        shaderLighting.renderLight();
 
         batch.begin();                              //begin the main batch drawing process
-        batch.setShader(shader);
+        //batch.setShader(shader);
         if(!mainPlayer.isDead && !paused)           //if the game is not paused and the player is not dead, do the main input handling
             inputHandler();                         //main input handling
 
@@ -202,7 +241,7 @@ public class GameMain extends Game {
     }
     private void drawEverything(){
         //draw each entity
-        for(Entity entity : entities) entity.draw(batch);
+        for(Entity entity : entities) entity.draw(this.batch);
         //draw the main player. This method call alone handles whether the player should be drawn backwards, forwards, or still
         if(!mainPlayer.isDead)
             mainPlayer.draw(batch, timePassed);
@@ -222,6 +261,21 @@ public class GameMain extends Game {
         for(Drop drop : drops) drop.updatePhysics();
         mainPlayer.updatePhysics(currentLevel);       //update the physics of the main player
         currentLevel.checkForDrops(mainPlayer);
+    }
+    private void renderFBO(){
+        frameBuffer.begin();
+
+        Gdx.gl.glClearColor(0f,0f,0f,1);
+        Gdx.gl.glClear(GL30.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
+
+        currentLevel.getCamera().setToOrtho(true);
+        currentLevel.updateCamera(mainPlayer);
+        currentLevel.getRenderer().setView(currentLevel.getCamera());
+        currentLevel.getRenderer().render();
+
+        frameBuffer.end();
+        currentLevel.getCamera().setToOrtho(false);
+
     }
     @Override
     public void dispose () {

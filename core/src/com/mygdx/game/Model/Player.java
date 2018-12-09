@@ -87,6 +87,12 @@ public class Player implements Character {
     {
         return this.height;
     }
+    public float getCenterX(){
+        return x + (width/2f);
+    }
+    public float getCenterY(){
+        return y + (height/2f);
+    }
     public float getX()
     {
         return this.x;
@@ -196,11 +202,6 @@ public class Player implements Character {
         checkCollision(oldX, oldY);
 
         if(x < 0) x = 0;
-
-        //conditional for when the camera should follow the player
-        if(x > Gdx.graphics.getWidth()*(1/4f)) level.getCamera().position.x  = this.x+Gdx.graphics.getWidth()/4f;
-        if(y > Gdx.graphics.getHeight()/2) level.getCamera().position.y  = this.y;
-        level.getCamera().update();
 
         if(this.health <= 0)
         {
