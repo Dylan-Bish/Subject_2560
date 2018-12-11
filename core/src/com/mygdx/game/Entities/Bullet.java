@@ -9,10 +9,7 @@ import com.mygdx.game.Entities.Entity;
 
 import java.util.Random;
 
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
-import static java.lang.Math.toRadians;
-import static java.lang.Math.pow;
+import static java.lang.Math.*;
 
 public class Bullet implements Entity {
 
@@ -120,6 +117,12 @@ public class Bullet implements Entity {
     }
     public void kill(){
         image.dispose();
+    }
+    public float getCenterX(){
+        return (float)(x + (sqrt(pow(height, 2) + pow(width, 2))/(2*cos(atan(height/width) + toRadians(angle)))));
+    }
+    public float getCenterY(){
+        return (float)(y + (sqrt(pow(height, 2) + pow(width, 2))/(2*sin(atan(height/width) + toRadians(angle)))));
     }
     public int getDamage(){
         return this.damage;

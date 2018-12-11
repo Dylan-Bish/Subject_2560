@@ -14,9 +14,8 @@ public class Grenade implements Entity {
 
     private float x,y;
     private int damage;
-    private Batch batch;
     private Texture image;
-    private int counter = 1;
+    private int counter = 0;
     private float mapUnitScale;
     private float width, height;
     private float gravity = -.2f;
@@ -30,7 +29,7 @@ public class Grenade implements Entity {
     private TiledMapTileLayer collisionLayer;
     private Player mainPlayer;
 
-    public Grenade(int damage, float angleDeg, int initialVelocity, float mapUnitScale, float initialX, float initialY, float width, float height, TiledMapTileLayer collisionLayer, Batch batch, Player mainPlayer) {
+    public Grenade(int damage, float angleDeg, int initialVelocity, float mapUnitScale, float initialX, float initialY, float width, float height, TiledMapTileLayer collisionLayer, Player mainPlayer) {
         // need the map unit scale for the collision detection of the grenades
         this.mapUnitScale = mapUnitScale;
         this.damage = damage;
@@ -48,8 +47,6 @@ public class Grenade implements Entity {
         this.height = height;
         //need to get the collision layer of the map for collision detection
         this.collisionLayer = collisionLayer;
-        //need to have a batch to draw the grenade itself and the explosion
-        this.batch = batch;
         //need to have mainPlayer to take damage
         this.mainPlayer = mainPlayer;
     }
@@ -147,29 +144,38 @@ public class Grenade implements Entity {
     public void draw(Batch batch){
         if(!exploding)
             batch.draw(image, x, y, width, height);
-        else
-            explode();
+        else{
+            if(counter <= 15)
+            {
+                int radius = 6*counter;
+                /* This is the horrendous conditional that checks to see if the explosion has hit the player */
+                if(((abs(mainPlayer.getX()-x) < radius) && (abs(mainPlayer.getY()-y) < radius))
+                        ||(abs((mainPlayer.getX()+mainPlayer.getWidth())-x) < radius && (abs(mainPlayer.getY()-y) < radius))
+                        ||(abs(mainPlayer.getX()-x) < radius) && (abs((mainPlayer.getY()+mainPlayer.getHeight())-y) < radius)
+                        ||(abs((mainPlayer.getX()+mainPlayer.getWidth())-x) < radius && (abs((mainPlayer.getY()+mainPlayer.getHeight())-y) < radius))) {
+                    mainPlayer.takeDamage(damage);
+                }
+                batch.draw(explosionTexture, x-radius, y-radius, 2*radius, 2*radius);
+            }else {
+                exploded = true;
+                this.kill();
+            }
+        }
     }
+    public float getCenterX() {
+        return (x+width/2);
+    }
+    public float getCenterY() {
+        return (y+height/2);
+    }
+
     public void kill(){
         image.dispose();
         explosionTexture.dispose();
     }
-    private void explode() {
-        if(counter <= 15)
-        {
-            int radius = 6*counter;
-            /* This is the horrendous conditional that checks to see if the explosion has hit the player */
-            if(((abs(mainPlayer.getX()-x) < radius) && (abs(mainPlayer.getY()-y) < radius))
-              ||(abs((mainPlayer.getX()+mainPlayer.getWidth())-x) < radius && (abs(mainPlayer.getY()-y) < radius))
-              ||(abs(mainPlayer.getX()-x) < radius) && (abs((mainPlayer.getY()+mainPlayer.getHeight())-y) < radius)
-              ||(abs((mainPlayer.getX()+mainPlayer.getWidth())-x) < radius && (abs((mainPlayer.getY()+mainPlayer.getHeight())-y) < radius))) {
-                mainPlayer.takeDamage(damage);
-            }
-            batch.draw(explosionTexture, x-radius, y-radius, 2*radius, 2*radius);
-        }else {
-            exploded = true;
-            this.kill();
-        }
+    public int exploding() {
+        if(!exploding) return 0;
+        else return counter;
     }
     public boolean isDead()
     {

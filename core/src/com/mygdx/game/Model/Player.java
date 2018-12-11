@@ -329,6 +329,7 @@ public class Player implements Character {
         return false;
     }
     public void draw(Batch batch, float timePassed){
+        batch.begin();
         if(movingRight)
             batch.draw(rightRollAnimation.getKeyFrame(timePassed, true), x, y, width, height);
         else if(movingLeft)
@@ -341,6 +342,7 @@ public class Player implements Character {
             batch.draw(arrow, x,y,width/2,height/2, width, height, 2, 2, armAngle);
         else
             batch.draw(arrow, x,y,width/2,height/2, width, height, -2, 2, armAngle+180);
+        batch.end();
     }
     public void dispose() {
         //disposes of all the atlases used in this file
