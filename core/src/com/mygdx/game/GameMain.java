@@ -1,30 +1,24 @@
 package com.mygdx.game;
 
-import box2dLight.RayHandler;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.FrameBuffer;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.Drops.Drop;
-import com.mygdx.game.Entities.Bullet;
-import com.mygdx.game.Entities.Entity;
-import com.mygdx.game.Entities.Grenade;
+import com.mygdx.game.Projectiles.Bullet;
+import com.mygdx.game.Projectiles.Projectile;
+import com.mygdx.game.Projectiles.Grenade;
 import com.mygdx.game.Model.Hud;
 import com.mygdx.game.Model.Level;
 import com.mygdx.game.Model.Light;
 import com.mygdx.game.Model.Player;
+import com.mygdx.game.Utilities.LevelGraph.Graph;
 import com.mygdx.game.Utilities.LightingSystem;
 
 import java.util.ArrayList;
-import java.util.List;
+
 import static java.lang.Math.atan;
 
 /**
@@ -50,7 +44,7 @@ public class GameMain extends Game {
     //x and y distances between the mouse pointer and the arm of the player
     private double dx, dy;
     //list of entities to be rendered
-    private ArrayList<Entity> entities;
+    private ArrayList<Projectile> entities;
     //list of drops to be rendered
     private ArrayList<Drop> drops;
     //boolean for keeping track of whether or not the player should be able to throw a grenade based on mouse presses
@@ -65,9 +59,8 @@ public class GameMain extends Game {
     private LightingSystem lightSys;
 
     private Light torchLight;
-    private Light tinyLight;
-    private Light grenadeLight;
 
+    Graph testGraph;
 
     @Override
     public void create () {
@@ -95,8 +88,8 @@ public class GameMain extends Game {
         drops = currentLevel.getDropList();
 
         torchLight = new Light(new Vector3(1f, 0.95f, 0.8f), mainPlayer.getCenterX(), mainPlayer.getCenterY(), 350);
-        tinyLight = new Light(new Vector3(0.6f, 0.6f, 0.6f), mainPlayer.getCenterX(), mainPlayer.getCenterY(), 50);
-        grenadeLight = new Light(new Vector3(1f, 0.95f, 0.8f), mainPlayer.getCenterX(), mainPlayer.getCenterY(), 250);
+
+        testGraph = new Graph(currentLevel);
     }
 
     @Override
@@ -117,14 +110,15 @@ public class GameMain extends Game {
 
         currentLevel.renderBackground();
         currentLevel.renderForeground(entities, drops);
+        testGraph.debugDrawGraph();
         if(!mainPlayer.isDead) mainPlayer.draw(currentLevel.getBatch(), timePassed);
 
         lightSys.addLight(torchLight);
         torchLight.updateCoords(mainPlayer.getCenterX(), mainPlayer.getCenterY());
 
-        for(Entity e : entities){
+        for(Projectile e : entities){
             if(e instanceof Grenade){
-                lightSys.addLight(new Light(new Vector3(1f, 0.95f, 0.8f), e.getCenterX(), e.getCenterY(), 250+20*((Grenade)e).exploding()));
+                lightSys.addLight(((Grenade) e).getLight());
             }
         }
 
@@ -246,7 +240,7 @@ public class GameMain extends Game {
         backgroundBatch.dispose();
         backgroundTexture.dispose();
         currentLevel.dispose();
-        for(Entity entity : entities)
-            entity.kill();
+        for(Projectile projectile : entities)
+            projectile.kill();
     }
 }

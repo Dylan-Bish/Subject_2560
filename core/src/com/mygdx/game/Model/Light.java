@@ -66,6 +66,16 @@ public class Light {
         this.y = centerY - radius;
     }
 
+    public void updateRadius(float radius){
+        this.radius = radius;
+
+        this.x = centerX - radius;
+        this.y = centerY - radius;
+
+        this.width = (int)(2f*radius);
+        this.height = (int)(2f*radius);
+    }
+
     public void draw(SpriteBatch batch){
         if(on){
             batch.setColor(color.x, color.y, color.z, 1.0f);
