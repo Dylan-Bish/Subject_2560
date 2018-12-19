@@ -40,6 +40,16 @@ public class Node {
 
     public void debugDraw(ShapeRenderer sr){
         switch(this.type) {
+            case NONE:
+                //set the color of the node to be drawn to gray
+                sr.setColor(0.5f, 0.5f, 0.5f, 1f);
+                break;
+
+            case ANTIGRAV:
+                //set the color of the node to be drawn to magenta
+                sr.setColor(1, 0, 1, 1);
+                break;
+
             case LEFTEND:
                 //set the color of the node to be drawn to red
                 sr.setColor(1, 0, 0, 1);
@@ -64,6 +74,8 @@ public class Node {
     }
 
     enum Type{
+        NONE,
+        ANTIGRAV,
         LEFTEND,
         RIGHTEND,
         PLATFORM,

@@ -12,7 +12,7 @@ public class DesktopLauncher {
 		config.height = 900;
 		config.fullscreen = false;
         config.vSyncEnabled = true;
-		config.resizable = true;
+		config.resizable = false;
 		config.title = "Subject 2560";
 		new LwjglApplication(new GameMain(), config);
 	}

@@ -13,8 +13,10 @@ import java.util.ArrayList;
 public class Graph {
     private Level currentLevel;
     private float mapUnitScale;
-    private ArrayList<Node> nodes;
-    private ArrayList<Edge> edges;
+    private ArrayList<ArrayList<Node>> nodes;
+    private ArrayList<ArrayList<Edge>> edges;
+
+    ShapeRenderer sr;
 
     public Graph(Level currentLevel){
         this.currentLevel = currentLevel;
@@ -23,6 +25,7 @@ public class Graph {
         nodes = new ArrayList<>();
         edges = new ArrayList<>();
 
+        sr = new ShapeRenderer();
         createGraph();
 
     }
@@ -33,12 +36,16 @@ public class Graph {
 
         //go through each position on the map and spawn each light
         for(int row = 0; row  < collisionLayer.getWidth(); row++){
+            nodes.add(new ArrayList<Node>());
             for(int col = 0; col < collisionLayer.getHeight(); col++){
-                if(collisionLayer.getCell(row,col) != null) {
-                    if (!collisionLayer.getCell(row, col).getTile().getProperties().containsKey("rigid")) {
-                        float centerX = collisionLayer.getTileWidth() * (row + 0.5f) * mapUnitScale;
-                        float centerY = collisionLayer.getTileHeight() * (col + 0.5f) * mapUnitScale;
-                        nodes.add(new Node(centerX, centerY, Node.Type.PLATFORM));
+                float centerX = collisionLayer.getTileWidth() * (col + 0.5f) * mapUnitScale;
+                float centerY = collisionLayer.getTileHeight() * (row + 0.5f) * mapUnitScale;
+
+                if(collisionLayer.getCell(col,row-1) != null) {
+                    if (collisionLayer.getCell(col, row-1).getTile().getProperties().containsKey("rigid")) {
+
+                        nodes.get(row).add(new Node(centerX, centerY, Node.Type.PLATFORM));
+
                     }
                 }
             }
@@ -71,17 +78,23 @@ public class Graph {
     }
 
     public void debugDrawGraph(){
-        ShapeRenderer sr = new ShapeRenderer();
+
         sr.setProjectionMatrix(currentLevel.getCamera().combined);
 
         sr.begin(ShapeRenderer.ShapeType.Filled);
-        for(Node node : nodes)
-            node.debugDraw(sr);
+        for(ArrayList<Node> nodeRow : nodes){
+            for(Node node : nodeRow){
+                node.debugDraw(sr);
+            }
+        }
         sr.end();
 
         sr.begin(ShapeRenderer.ShapeType.Line);
-        for(Edge edge : edges)
-            edge.debugDraw(sr);
-
+        for(ArrayList<Edge> edgeRow : edges) {
+            for (Edge edge : edgeRow) {
+                edge.debugDraw(sr);
+            }
+        }
+        sr.end();
     }
 }

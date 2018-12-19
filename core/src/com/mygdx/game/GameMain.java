@@ -44,7 +44,7 @@ public class GameMain extends Game {
     //x and y distances between the mouse pointer and the arm of the player
     private double dx, dy;
     //list of entities to be rendered
-    private ArrayList<Projectile> entities;
+    private ArrayList<Projectile> projectiles;
     //list of drops to be rendered
     private ArrayList<Drop> drops;
     //boolean for keeping track of whether or not the player should be able to throw a grenade based on mouse presses
@@ -81,7 +81,7 @@ public class GameMain extends Game {
         //instantiate the batch for the background
         backgroundBatch = new SpriteBatch();
         //keep lists of grenades and bullets to be rendered
-        entities = new ArrayList<>();
+        projectiles = new ArrayList<>();
         //instantiate the background spriteBatch
         backgroundTexture = new Texture(Gdx.files.internal("maps/test_landscape.png"));
         this.hud = new Hud();
@@ -109,14 +109,17 @@ public class GameMain extends Game {
         //batch.setColor(0.2f, 0.2f, 0.2f, 1f);
 
         currentLevel.renderBackground();
-        currentLevel.renderForeground(entities, drops);
+
+        currentLevel.renderForeground(projectiles, drops);
+
         testGraph.debugDrawGraph();
+
         if(!mainPlayer.isDead) mainPlayer.draw(currentLevel.getBatch(), timePassed);
 
         lightSys.addLight(torchLight);
         torchLight.updateCoords(mainPlayer.getCenterX(), mainPlayer.getCenterY());
 
-        for(Projectile e : entities){
+        for(Projectile e : projectiles){
             if(e instanceof Grenade){
                 lightSys.addLight(((Grenade) e).getLight());
             }
@@ -130,6 +133,7 @@ public class GameMain extends Game {
             updateAllPhysics();
         }
         hud.draw(mainPlayer, mapUnitScale);
+
         if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) paused = !paused;  //pause game input handler
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) Gdx.app.exit();   //end game input handler
     }
@@ -185,7 +189,7 @@ public class GameMain extends Game {
             if(grenadeSpawnable)
                 if(mainPlayer.grenades > 0) {
                     //spawn a new grenade
-                    entities.add(new Grenade(23,
+                    projectiles.add(new Grenade(23,
                             angle,
                             20,
                             mapUnitScale,
@@ -203,7 +207,7 @@ public class GameMain extends Game {
         }else grenadeSpawnable = true;
         if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
             if(mainPlayer.bullets > 0) {
-                entities.add(new Bullet(0,
+                projectiles.add(new Bullet(0,
                         30,
                         angle,
                         mainPlayer.getX() + mainPlayer.getWidth() / 2 - mainPlayer.getWidth() / 16,
@@ -219,11 +223,11 @@ public class GameMain extends Game {
     }
     private void updateAllPhysics(){
         //****do not change to forEach loop, it breaks shit****//
-        for (int i = 0; i < entities.size(); i++) { //for each grenade
-            entities.get(i).updatePhysics();        //update the physics of the grenade
-            if (entities.get(i).isDead()) {         //if the entity should be killed (not rendered or have it's physics updated anymore)
-                entities.get(i).kill();          //dispose of it
-                entities.remove(i);                 //and remove it from the list
+        for (int i = 0; i < projectiles.size(); i++) { //for each grenade
+            projectiles.get(i).updatePhysics();        //update the physics of the grenade
+            if (projectiles.get(i).isDead()) {         //if the entity should be killed (not rendered or have it's physics updated anymore)
+                projectiles.get(i).kill();          //dispose of it
+                projectiles.remove(i);                 //and remove it from the list
                 i++;                                //and increment the loop counter so that there's no nullpointer nonsense happening
             }
         }
@@ -240,7 +244,7 @@ public class GameMain extends Game {
         backgroundBatch.dispose();
         backgroundTexture.dispose();
         currentLevel.dispose();
-        for(Projectile projectile : entities)
+        for(Projectile projectile : projectiles)
             projectile.kill();
     }
 }
