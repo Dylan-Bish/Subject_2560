@@ -1,12 +1,9 @@
 package com.mygdx.game.Model;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.*;
@@ -15,10 +12,9 @@ import com.mygdx.game.Drops.AmmoBox;
 import com.mygdx.game.Drops.Drop;
 import com.mygdx.game.Drops.HealthBox;
 import com.mygdx.game.Drops.Key;
-import com.mygdx.game.Entities.Entity;
+import com.mygdx.game.Projectiles.Projectile;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class Level{
     //the scale of the map. value of 1 indicates no scaling
@@ -124,6 +120,9 @@ public class Level{
     public TiledMapRenderer getRenderer() {
         return otmRenderer;
     }
+    public float getUnitScale(){
+        return this.mapUnitScale;
+    }
     public void dispose() {
         //getRendererBatch().dispose();
         //renderer.dispose();
@@ -202,11 +201,11 @@ public class Level{
                 if(lightsLayer.getCell(i,j) != null) {
                     if (lightsLayer.getCell(i, j).getTile().getProperties().containsKey("light")){
                         TiledMapTile tile = lightsLayer.getCell(i, j).getTile();
-                        String intesity = (String) tile.getProperties().get("light");
+                        String intensity = (String) tile.getProperties().get("light");
                         Color lightColor = (Color)tile.getProperties().get("color");
                         float centerX = getCollisionLayer().getTileWidth()*(i+0.5f)*mapUnitScale;
                         float centerY = getCollisionLayer().getTileHeight()*(j+0.5f)*mapUnitScale;
-                        switch (intesity){
+                        switch (intensity){
                             case "1":
                                 lights.add(new Light(lightColor, centerX, centerY, 400));
                                 break;
@@ -227,13 +226,13 @@ public class Level{
     public SpriteBatch getBatch(){
         return this.batch;
     }
-    public void renderForeground(ArrayList<Entity> entities, ArrayList<Drop> drops){
+    public void renderForeground(ArrayList<Projectile> entities, ArrayList<Drop> drops){
         int[] layer = {2};
         otmRenderer.setView(camera);
         otmRenderer.render(layer);
 
         this.batch.begin();
-        for(Entity entity : entities) entity.draw(this.batch);
+        for(Projectile projectile : entities) projectile.draw(this.batch);
         for(Drop drop : drops) drop.draw(this.batch);
         batch.end();
 

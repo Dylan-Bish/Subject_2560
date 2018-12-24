@@ -1,8 +1,10 @@
-package com.mygdx.game.Entities;
+package com.mygdx.game.Projectiles;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.math.Vector3;
+import com.mygdx.game.Model.Light;
 import com.mygdx.game.Model.Player;
 
 import static java.lang.Math.cos;
@@ -10,7 +12,7 @@ import static java.lang.Math.sin;
 import static java.lang.Math.toRadians;
 import static java.lang.Math.abs;
 
-public class Grenade implements Entity {
+public class Grenade implements Projectile {
 
     private float x,y;
     private int damage;
@@ -28,6 +30,7 @@ public class Grenade implements Entity {
     private float air_friction = 0.015f;
     private TiledMapTileLayer collisionLayer;
     private Player mainPlayer;
+    private Light light;
 
     public Grenade(int damage, float angleDeg, int initialVelocity, float mapUnitScale, float initialX, float initialY, float width, float height, TiledMapTileLayer collisionLayer, Player mainPlayer) {
         // need the map unit scale for the collision detection of the grenades
@@ -49,6 +52,8 @@ public class Grenade implements Entity {
         this.collisionLayer = collisionLayer;
         //need to have mainPlayer to take damage
         this.mainPlayer = mainPlayer;
+
+        this.light = new Light(new Vector3(1f, 0.95f, 0.8f), getCenterX(), getCenterY(), 250);
     }
     public void updatePhysics(){
         //if the grenade is currently exploding, we don't want to assign any motion to it, we want it to be centered at the point where it exploded
@@ -104,7 +109,11 @@ public class Grenade implements Entity {
                 exploding = true;     // once counter has reached 242, 4 seconds have passed
                 counter = 0;
             }
+        }else{
+            light.updateRadius(250+20*exploding());
         }
+        light.updateCoords(getCenterX(),getCenterY());
+
         counter ++;
     }
     private boolean hasProperty(float x, float y, String property) {
@@ -168,7 +177,9 @@ public class Grenade implements Entity {
     public float getCenterY() {
         return (y+height/2);
     }
-
+    public Light getLight(){
+        return this.light;
+    }
     public void kill(){
         image.dispose();
         explosionTexture.dispose();

@@ -1,17 +1,16 @@
-package com.mygdx.game.Entities;
+package com.mygdx.game.Projectiles;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.mygdx.game.Entities.Entity;
 
 import java.util.Random;
 
 import static java.lang.Math.*;
 
-public class Bullet implements Entity {
+public class Bullet implements Projectile {
 
     //current coordinates of the bullet
     private float x,y;
